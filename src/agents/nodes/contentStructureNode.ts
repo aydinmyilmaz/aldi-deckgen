@@ -5,14 +5,17 @@ import type { PipelineState } from '../state';
 export async function contentStructureNode(
   state: PipelineState
 ): Promise<Partial<PipelineState>> {
-  const { documentText, config } = state;
+  const { documentText, config, styleDna } = state;
   const llm = createLLM();
 
   const response = await llm.invoke([
     new SystemMessage(
-      `You are a content analyst. Given document text and a user's presentation goal, ` +
-      `extract the main topic, 3-7 key themes, and a 2-sentence summary. ` +
-      `Respond in ${config.language}. ` +
+      `You are a senior content strategist. ` +
+      `Analyze a document and extract the core content needed for a presentation. ` +
+      `The presentation is for: ${config.audience || 'a general audience'}. ` +
+      `Its purpose is to ${config.purpose}: make every extracted point serve that goal. ` +
+      `\n\nStyle DNA of the source document (match this communication style in all output):\n${styleDna}` +
+      `\n\nRespond in ${config.language}. ` +
       `Output ONLY valid JSON: { "mainTopic": string, "keyThemes": string[], "summary": string }`
     ),
     new HumanMessage(

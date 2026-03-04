@@ -12,6 +12,12 @@ export const GraphState = Annotation.Root({
     default: () => ({} as PresentationConfig),
   }),
 
+  // styleDnaNode output — stored as JSON string, passed to all downstream nodes
+  styleDna: Annotation<string>({
+    reducer: (_, y) => y,
+    default: () => '',
+  }),
+
   // Agent 1 output
   mainTopic: Annotation<string>({
     reducer: (_, y) => y,
