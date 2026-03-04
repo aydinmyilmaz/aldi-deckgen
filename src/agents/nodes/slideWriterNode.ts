@@ -7,8 +7,15 @@ import type { SlideOutline } from '@/types';
 export async function slideWriterNode(
   state: PipelineState
 ): Promise<Partial<PipelineState>> {
-  const { slideTitles, documentText, config, styleDna } = state;
+  const { slideTitles, documentText, config, styleDna, extractedSlideContent } = state;
   const llm = createLLM();
+
+  // Build source content: per-slide if extraction ran, raw text otherwise
+  const sourceContent = extractedSlideContent.length > 0
+    ? extractedSlideContent
+        .map((s) => `=== Slide ${s.slideIndex} (${s.topic}) ===\n${s.content}`)
+        .join('\n\n')
+    : documentText.slice(0, 6000);
 
   const response = await llm.invoke([
     new SystemMessage(
@@ -18,14 +25,11 @@ export async function slideWriterNode(
       `\n\nCritical: match the wording conventions from the Style DNA below exactly — ` +
       `same headline style, bullet style, sentence length, and register. ` +
       `\n\nStyle DNA:\n${styleDna}` +
-      `\n\nFor each slide produce:
-- bullets: 3-5 concise bullet points using the source document facts
-- speakerNotes: 1-2 sentences for the presenter (what to say, not what's on the slide)
-` +
+      `\n\nFor each slide produce:\n- bullets: 3-5 concise bullet points using the source document facts\n- speakerNotes: 1-2 sentences for the presenter (what to say, not what's on the slide)\n` +
       `Output ONLY valid JSON: { "slides": [{ "index": number, "title": string, "keyMessage": string, "bullets": string[], "speakerNotes": string, "visualSuggestion": string }] }`
     ),
     new HumanMessage(
-      `Slide blueprint: ${JSON.stringify(slideTitles)}\n\nSource document excerpt:\n${documentText.slice(0, 6000)}`
+      `Slide blueprint: ${JSON.stringify(slideTitles)}\n\nSource content:\n${sourceContent}`
     ),
   ]);
 
