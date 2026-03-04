@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import type { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { Button } from '@/components/ui/button';
 import type { SlideOutline } from '@/types';
 
 interface Props {
   slide: SlideOutline;
-  dragHandleProps?: Record<string, unknown>;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
   onUpdate: (updated: SlideOutline) => void;
   onDelete: (id: string) => void;
 }

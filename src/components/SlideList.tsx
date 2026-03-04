@@ -48,7 +48,7 @@ export function SlideList({ slides, onChange }: Props) {
                   >
                     <SlideCard
                       slide={slide}
-                      dragHandleProps={provided.dragHandleProps ?? undefined}
+                      dragHandleProps={provided.dragHandleProps}
                       onUpdate={handleUpdate}
                       onDelete={handleDelete}
                     />
