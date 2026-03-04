@@ -1,5 +1,5 @@
 import { Annotation } from '@langchain/langgraph';
-import type { PresentationConfig, SlideOutline } from '@/types';
+import type { PresentationConfig, SlideOutline, ExtractedSlideContent } from '@/types';
 
 export const GraphState = Annotation.Root({
   // Inputs — set once before graph runs
@@ -16,6 +16,12 @@ export const GraphState = Annotation.Root({
   styleDna: Annotation<string>({
     reducer: (_, y) => y,
     default: () => '',
+  }),
+
+  // documentExtractionNode output (only populated when config.useLlmExtraction = true)
+  extractedSlideContent: Annotation<ExtractedSlideContent[]>({
+    reducer: (_, y) => y,
+    default: () => [],
   }),
 
   // Agent 1 output

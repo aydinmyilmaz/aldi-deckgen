@@ -9,6 +9,13 @@ export interface PresentationConfig {
   userPrompt: string;
   audience: string;
   purpose: Purpose;
+  useLlmExtraction: boolean; // NEW
+}
+
+export interface ExtractedSlideContent {
+  slideIndex: number;
+  topic: string;
+  content: string;
 }
 
 export interface SlideOutline {
