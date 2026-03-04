@@ -15,6 +15,7 @@ const DEFAULT_CONFIG: PresentationConfig = {
   userPrompt: '',
   audience: '',
   purpose: 'inform',
+  useLlmExtraction: false,
 };
 
 type Stage = 'input' | 'generating' | 'slides';
@@ -87,6 +88,37 @@ export default function Home() {
                 onChange={(e) => setConfig({ ...config, userPrompt: e.target.value })}
                 disabled={stage === 'generating'}
               />
+            </div>
+
+            {/* AI Extraction Toggle */}
+            <div className="bg-white border rounded-2xl p-6">
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <p className="font-semibold text-base">AI Content Extraction</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Use GPT to organize the document into per-slide content blocks before generating.
+                  </p>
+                </div>
+                <button
+                  role="switch"
+                  aria-checked={config.useLlmExtraction}
+                  onClick={() => setConfig({ ...config, useLlmExtraction: !config.useLlmExtraction })}
+                  disabled={stage === 'generating'}
+                  className={`
+                    relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                    disabled:opacity-50
+                    ${config.useLlmExtraction ? 'bg-indigo-600' : 'bg-slate-200'}
+                  `}
+                >
+                  <span
+                    className={`
+                      inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
+                      ${config.useLlmExtraction ? 'translate-x-6' : 'translate-x-1'}
+                    `}
+                  />
+                </button>
+              </label>
             </div>
 
             {/* Attachments */}
