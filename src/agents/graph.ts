@@ -17,7 +17,10 @@ const workflow = new StateGraph(GraphState)
   .addNode('contentStructure', contentStructureNode)
   .addNode('outline', outlineNode)
   .addNode('slideWriter', slideWriterNode)
-  .addConditionalEdges('__start__', routeEntry)
+  .addConditionalEdges('__start__', routeEntry, {
+    documentExtraction: 'documentExtraction',
+    extractStyleDna: 'extractStyleDna',
+  })
   .addEdge('documentExtraction', 'extractStyleDna')
   .addEdge('extractStyleDna', 'contentStructure')
   .addEdge('contentStructure', 'outline')
