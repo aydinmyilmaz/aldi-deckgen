@@ -1,5 +1,5 @@
 import { Annotation } from '@langchain/langgraph';
-import type { PresentationConfig, SlideOutline, ExtractedSlideContent } from '@/types';
+import type { PresentationConfig, SlideOutline, SlideType, ExtractedSlideContent } from '@/types';
 
 export const GraphState = Annotation.Root({
   // Inputs — set once before graph runs
@@ -39,7 +39,7 @@ export const GraphState = Annotation.Root({
   }),
 
   // Agent 2 output
-  slideTitles: Annotation<Array<{ index: number; title: string }>>({
+  slideTitles: Annotation<Array<{ index: number; title: string; slideType: SlideType; keyMessage: string; visualSuggestion: string }>>({
     reducer: (_, y) => y,
     default: () => [],
   }),
@@ -48,6 +48,16 @@ export const GraphState = Annotation.Root({
   slides: Annotation<SlideOutline[]>({
     reducer: (_, y) => y,
     default: () => [],
+  }),
+
+  // Content reviewer — feedback loop state
+  reviewFeedback: Annotation<string>({
+    reducer: (_, y) => y,
+    default: () => '',
+  }),
+  reviewAttempts: Annotation<number>({
+    reducer: (_, y) => y,
+    default: () => 0,
   }),
 });
 

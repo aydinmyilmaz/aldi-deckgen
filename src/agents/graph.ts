@@ -5,10 +5,15 @@ import { styleDnaNode as extractStyleDnaNode } from './nodes/styleDnaNode';
 import { contentStructureNode } from './nodes/contentStructureNode';
 import { outlineNode } from './nodes/outlineNode';
 import { slideWriterNode } from './nodes/slideWriterNode';
+import { contentReviewerNode } from './nodes/contentReviewerNode';
 import type { PipelineState } from './state';
 
 function routeEntry(state: PipelineState): string {
   return state.config.useLlmExtraction ? 'documentExtraction' : 'extractStyleDna';
+}
+
+function routeAfterReview(state: PipelineState): string {
+  return state.reviewFeedback ? 'slideWriter' : '__end__';
 }
 
 const workflow = new StateGraph(GraphState)
@@ -17,6 +22,7 @@ const workflow = new StateGraph(GraphState)
   .addNode('contentStructure', contentStructureNode)
   .addNode('outline', outlineNode)
   .addNode('slideWriter', slideWriterNode)
+  .addNode('contentReviewer', contentReviewerNode)
   .addConditionalEdges('__start__', routeEntry, {
     documentExtraction: 'documentExtraction',
     extractStyleDna: 'extractStyleDna',
@@ -25,6 +31,10 @@ const workflow = new StateGraph(GraphState)
   .addEdge('extractStyleDna', 'contentStructure')
   .addEdge('contentStructure', 'outline')
   .addEdge('outline', 'slideWriter')
-  .addEdge('slideWriter', '__end__');
+  .addEdge('slideWriter', 'contentReviewer')
+  .addConditionalEdges('contentReviewer', routeAfterReview, {
+    slideWriter: 'slideWriter',
+    __end__: '__end__',
+  });
 
 export const presentationGraph = workflow.compile();

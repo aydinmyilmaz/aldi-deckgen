@@ -24,15 +24,14 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
     onChange({ ...config, ...patch });
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* Tone */}
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Select
         value={config.tone}
         onValueChange={(v) => update({ tone: v as Tone })}
         disabled={disabled}
       >
-        <SelectTrigger className="w-36 rounded-full">
-          <SelectValue />
+        <SelectTrigger className="w-full input-surface">
+          <SelectValue placeholder="Tone" />
         </SelectTrigger>
         <SelectContent>
           {TONES.map((t) => (
@@ -41,13 +40,12 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
         </SelectContent>
       </Select>
 
-      {/* Slide count */}
       <Select
         value={String(config.slideCount)}
         onValueChange={(v) => update({ slideCount: Number(v) })}
         disabled={disabled}
       >
-        <SelectTrigger className="w-32 rounded-full">
+        <SelectTrigger className="w-full input-surface">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -57,13 +55,12 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
         </SelectContent>
       </Select>
 
-      {/* Language */}
       <Select
         value={config.language}
         onValueChange={(v) => update({ language: v as Language })}
         disabled={disabled}
       >
-        <SelectTrigger className="w-36 rounded-full">
+        <SelectTrigger className="w-full input-surface">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -73,13 +70,12 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
         </SelectContent>
       </Select>
 
-      {/* Purpose */}
       <Select
         value={config.purpose}
         onValueChange={(v) => update({ purpose: v as Purpose })}
         disabled={disabled}
       >
-        <SelectTrigger className="w-32 rounded-full">
+        <SelectTrigger className="w-full input-surface">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -89,14 +85,13 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
         </SelectContent>
       </Select>
 
-      {/* Audience */}
       <input
         type="text"
         placeholder="Audience (e.g. Exec Board)"
         value={config.audience}
         onChange={(e) => update({ audience: e.target.value })}
         disabled={disabled}
-        className="h-9 rounded-full border px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 w-48"
+        className="input-surface subtle-ring h-11 w-full px-4 text-sm disabled:opacity-50 sm:col-span-2 lg:col-span-4"
       />
     </div>
   );

@@ -48,38 +48,38 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.9rem;
+  --background: oklch(0.985 0.006 255);
+  --foreground: oklch(0.28 0.03 258);
+  --card: oklch(1 0.002 255);
+  --card-foreground: oklch(0.25 0.03 258);
+  --popover: oklch(1 0.002 255);
+  --popover-foreground: oklch(0.25 0.03 258);
+  --primary: oklch(0.56 0.16 250);
+  --primary-foreground: oklch(0.985 0.002 260);
+  --secondary: oklch(0.955 0.01 255);
+  --secondary-foreground: oklch(0.3 0.03 258);
+  --muted: oklch(0.962 0.007 255);
+  --muted-foreground: oklch(0.51 0.025 258);
+  --accent: oklch(0.94 0.02 248);
+  --accent-foreground: oklch(0.3 0.03 258);
+  --destructive: oklch(0.62 0.22 24);
+  --border: oklch(0.89 0.012 255);
+  --input: oklch(0.915 0.01 255);
+  --ring: oklch(0.59 0.14 250);
+  --chart-1: oklch(0.59 0.2 252);
+  --chart-2: oklch(0.69 0.13 188);
+  --chart-3: oklch(0.74 0.17 78);
+  --chart-4: oklch(0.64 0.2 33);
+  --chart-5: oklch(0.62 0.2 145);
+  --sidebar: oklch(0.98 0.006 255);
+  --sidebar-foreground: oklch(0.25 0.03 258);
+  --sidebar-primary: oklch(0.56 0.16 250);
+  --sidebar-primary-foreground: oklch(0.985 0.002 260);
+  --sidebar-accent: oklch(0.95 0.01 255);
+  --sidebar-accent-foreground: oklch(0.3 0.03 258);
+  --sidebar-border: oklch(0.89 0.012 255);
+  --sidebar-ring: oklch(0.59 0.14 250);
 }
 
 .dark {
@@ -120,7 +120,72 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
   body {
-    @apply bg-background text-foreground;
+    @apply min-h-screen;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 10% -15%, rgba(37, 99, 235, 0.2), transparent 36%),
+      radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.14), transparent 28%),
+      linear-gradient(180deg, #f4f7ff 0%, #f8fafe 42%, #ffffff 100%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: rgba(59, 130, 246, 0.25);
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-3xl border bg-white/88 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.45)] backdrop-blur-sm;
+  }
+
+  .section-label {
+    @apply text-[0.7rem] font-semibold tracking-[0.18em] uppercase text-primary/80;
+  }
+
+  .section-title {
+    @apply text-3xl font-semibold leading-tight text-foreground sm:text-5xl;
+  }
+
+  .section-subtitle {
+    @apply mt-3 text-base text-muted-foreground sm:text-xl;
+  }
+
+  .glass-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white/75 px-4 py-1.5 text-sm font-medium text-primary shadow-sm backdrop-blur-md;
+  }
+
+  .subtle-ring {
+    @apply transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20;
+  }
+
+  .input-surface {
+    @apply rounded-2xl border border-border/90 bg-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)];
+  }
+
+  .hover-lift {
+    @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_16px_35px_-26px_rgba(15,23,42,0.65)];
+  }
+
+  .slide-card {
+    @apply rounded-3xl border border-border/90 bg-white/92 shadow-[0_16px_38px_-28px_rgba(15,23,42,0.55)];
+  }
+
+  .fade-in-up {
+    animation: fade-in-up 420ms ease-out both;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

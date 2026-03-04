@@ -37,7 +37,7 @@ export function SlideList({ slides, onChange }: Props) {
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="space-y-3"
+            className="space-y-4"
           >
             {slides.map((slide, index) => (
               <Draggable key={slide.id} draggableId={slide.id} index={index}>
@@ -45,6 +45,7 @@ export function SlideList({ slides, onChange }: Props) {
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
+                    className="fade-in-up"
                   >
                     <SlideCard
                       slide={slide}
