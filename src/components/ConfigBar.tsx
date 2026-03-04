@@ -1,10 +1,16 @@
 'use client';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Tone, Language, PresentationConfig } from '@/types';
+import type { Tone, Language, Purpose, PresentationConfig } from '@/types';
 
 const TONES: Tone[] = ['Standard', 'Professional', 'Casual', 'Academic'];
 const LANGUAGES: Language[] = ['English', 'Turkish', 'Spanish', 'French', 'German'];
+const PURPOSES: { value: Purpose; label: string }[] = [
+  { value: 'inform', label: 'Inform' },
+  { value: 'align', label: 'Align' },
+  { value: 'decide', label: 'Decide' },
+  { value: 'sell', label: 'Sell' },
+];
 const SLIDE_COUNTS = [3, 5, 7, 10, 15];
 
 interface Props {
@@ -18,7 +24,7 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
     onChange({ ...config, ...patch });
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {/* Tone */}
       <Select
         value={config.tone}
@@ -66,6 +72,32 @@ export function ConfigBar({ config, onChange, disabled }: Props) {
           ))}
         </SelectContent>
       </Select>
+
+      {/* Purpose */}
+      <Select
+        value={config.purpose}
+        onValueChange={(v) => update({ purpose: v as Purpose })}
+        disabled={disabled}
+      >
+        <SelectTrigger className="w-32 rounded-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {PURPOSES.map((p) => (
+            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Audience */}
+      <input
+        type="text"
+        placeholder="Audience (e.g. Exec Board)"
+        value={config.audience}
+        onChange={(e) => update({ audience: e.target.value })}
+        disabled={disabled}
+        className="h-9 rounded-full border px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 w-48"
+      />
     </div>
   );
 }
