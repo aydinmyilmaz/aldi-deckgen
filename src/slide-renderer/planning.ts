@@ -54,6 +54,9 @@ function detectChartData(slide: SlideOutline): SlideChartSpec | null {
 }
 
 function chooseLayout(slide: SlideOutline, hasChart: boolean): RenderLayoutKind {
+  if ((slide.statCards?.length ?? 0) >= 2) return 'stats-highlight';
+  if ((slide.cardItems?.length ?? 0) >= 2) return 'card-grid';
+  if (slide.tableData) return 'comparison-table';
   if (slide.slideType === 'title') return 'title-focus';
   if (slide.slideType === 'agenda') return 'agenda-list';
   if (slide.slideType === 'conclusion' || slide.slideType === 'qna') return 'conclusion-focus';
@@ -85,6 +88,9 @@ export function buildBaseRenderPlan(slides: SlideOutline[]): SlideRenderPlan[] {
       selectedImageUrl: slide.imageUrl?.trim() || undefined,
       selectedImageAlt: slide.imageAlt?.trim() || undefined,
       selectedImageAttributionLine: slide.imageAttributionLine?.trim() || undefined,
+      statCards: slide.statCards,
+      cardItems: slide.cardItems,
+      tableData: slide.tableData,
     };
   });
 }
