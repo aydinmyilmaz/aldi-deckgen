@@ -86,6 +86,8 @@ function applySlideShell(
     fit: 'shrink',
   });
 
+  addSlideTypeAccent(pptx, slide, plan, template);
+
   return slide;
 }
 
@@ -190,6 +192,70 @@ function addKeyMessageBlock(slide: PptxGenJS.Slide, plan: SlideRenderPlan, templ
     color: template.palette.text,
     fit: 'shrink',
   });
+}
+
+function addSlideTypeAccent(
+  pptx: PptxGenJS,
+  slide: PptxGenJS.Slide,
+  plan: SlideRenderPlan,
+  template: DeckTemplate
+): void {
+  switch (plan.slideType) {
+    case 'problem':
+    case 'findings': {
+      // Bottom-right corner triangle accent
+      slide.addShape(pptx.ShapeType.rtTriangle, {
+        x: 11.8,
+        y: 5.8,
+        w: 1.55,
+        h: 1.7,
+        line: { color: template.palette.accentSoft, pt: 0 },
+        fill: { color: template.palette.accentSoft, transparency: 30 },
+      });
+      break;
+    }
+    case 'solution':
+    case 'benefits': {
+      // Top-right circle outline accent
+      slide.addShape(pptx.ShapeType.ellipse, {
+        x: 11.9,
+        y: 0.6,
+        w: 1.05,
+        h: 1.05,
+        line: { color: template.palette.accent, pt: 1.5 },
+        fill: { color: template.palette.background, transparency: 100 },
+      });
+      break;
+    }
+    case 'implementation': {
+      // Dashed horizontal divider line near top of content area
+      slide.addShape(pptx.ShapeType.line, {
+        x: 0.55,
+        y: 2.52,
+        w: 12.2,
+        h: 0,
+        line: { color: template.palette.divider, pt: 1, dashType: 'dash' },
+      });
+      break;
+    }
+    case 'references': {
+      // Large muted quotation mark watermark
+      slide.addText('\u201C', {
+        x: 10.5,
+        y: 4.8,
+        w: 2.8,
+        h: 2.8,
+        fontFace: template.typography.titleFont,
+        fontSize: 180,
+        color: template.palette.divider,
+        align: 'right',
+        valign: 'bottom',
+      });
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 function addChartIfAvailable(
