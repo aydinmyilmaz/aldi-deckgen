@@ -10,13 +10,13 @@ function makeBulletRuns(
   fontFace: string
 ): PptxGenJS.TextProps[] {
   return bullets.map((text, i) => ({
-    text,
+    text: text.trim(),
     options: {
-      bullet: { type: 'bullet' } as PptxGenJS.TextPropsOptions['bullet'],
+      bullet: { type: 'bullet' },
       color,
       fontFace,
       breakLine: i < bullets.length - 1,
-    } as PptxGenJS.TextPropsOptions,
+    } satisfies PptxGenJS.TextPropsOptions,
   }));
 }
 
@@ -238,6 +238,7 @@ function renderSlideByLayout(
     case 'title-focus': {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(plan.bullets.slice(0, 4), template.palette.text, template.typography.bodyFont),
           { x: 1.2, y: 3.0, w: 10.9, h: 2.8, fontSize: 20, valign: 'top' }
@@ -248,6 +249,7 @@ function renderSlideByLayout(
     case 'chart-right': {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
           { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: 15, fit: 'shrink' }
@@ -285,12 +287,14 @@ function renderSlideByLayout(
       addKeyMessageBlock(slide, plan, template);
       const [left, right] = splitTwoColumns(plan.bullets);
       if (left.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(left, template.palette.text, template.typography.bodyFont),
           { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
         );
       }
       if (right.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(right, template.palette.text, template.typography.bodyFont),
           { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
@@ -312,6 +316,7 @@ function renderSlideByLayout(
         ? plan.bullets.join('\n')
         : (plan.keyMessage || '');
       if (conclusionText) {
+        // Conclusion is a statement — plain text, no bullet runs
         slide.addText(conclusionText, {
           x: 1.25,
           y: 3.15,
@@ -331,6 +336,7 @@ function renderSlideByLayout(
     default: {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
           { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: 16, fit: 'shrink' }
