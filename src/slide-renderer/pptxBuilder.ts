@@ -696,6 +696,58 @@ function renderSlideByLayout(
       });
       break;
     }
+    case 'comparison-table': {
+      const tableData = plan.tableData;
+      if (!tableData || tableData.headers.length === 0) break;
+
+      const allRows = [tableData.headers, ...tableData.rows];
+      const colCount = tableData.headers.length;
+      const colW = Array.from({ length: colCount }, () => 12.3 / colCount);
+      const headerH = 0.55;
+      const dataRowH = Math.min(0.52, (4.8 - headerH) / Math.max(tableData.rows.length, 1));
+      const rowH = allRows.map((_, rowIdx) => (rowIdx === 0 ? headerH : dataRowH));
+
+      const tableRows: PptxGenJS.TableRow[] = allRows.map((row, rowIdx) =>
+        row.map((cell): PptxGenJS.TableCell => {
+          if (rowIdx === 0) {
+            const options: PptxGenJS.TableCellProps = {
+              bold: true,
+              color: template.palette.background,
+              fill: { color: template.palette.accent },
+              fontFace: template.typography.bodyFont,
+              align: 'center',
+              valign: 'middle',
+              fontSize: 13,
+            };
+            return { text: cell, options };
+          }
+
+          const dataRowIdx = rowIdx - 1;
+          const options: PptxGenJS.TableCellProps = {
+            color: template.palette.text,
+            fill: {
+              color:
+                dataRowIdx % 2 === 0 ? template.palette.surface : template.palette.background,
+            },
+            fontFace: template.typography.bodyFont,
+            align: 'center',
+            valign: 'middle',
+            fontSize: 12,
+          };
+          return { text: cell, options };
+        })
+      );
+
+      slide.addTable(tableRows, {
+        x: 0.5,
+        y: 2.1,
+        w: 12.3,
+        colW,
+        rowH,
+        border: { type: 'solid', pt: 0.8, color: template.palette.divider },
+      });
+      break;
+    }
     case 'content-single-column':
     default: {
       addKeyMessageBlock(slide, plan, template);
