@@ -4,8 +4,20 @@ import type { DeckTemplate, SlideRenderPlan } from '@/types/render';
 
 const SLIDE_WIDTH = 13.333;
 
-function bulletsToText(bullets: string[]): string {
-  return bullets.map((bullet) => `• ${bullet}`).join('\n');
+function makeBulletRuns(
+  bullets: string[],
+  color: string,
+  fontFace: string
+): PptxGenJS.TextProps[] {
+  return bullets.map((text, i) => ({
+    text,
+    options: {
+      bullet: { type: 'bullet' } as PptxGenJS.TextPropsOptions['bullet'],
+      color,
+      fontFace,
+      breakLine: i < bullets.length - 1,
+    } as PptxGenJS.TextPropsOptions,
+  }));
 }
 
 function splitTwoColumns<T>(items: T[]): [T[], T[]] {
@@ -226,31 +238,21 @@ function renderSlideByLayout(
     case 'title-focus': {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
-        slide.addText(bulletsToText(plan.bullets.slice(0, 4)), {
-          x: 1.2,
-          y: 3.0,
-          w: 10.9,
-          h: 2.8,
-          fontFace: template.typography.bodyFont,
-          fontSize: 22,
-          color: template.palette.text,
-          valign: 'top',
-        });
+        slide.addText(
+          makeBulletRuns(plan.bullets.slice(0, 4), template.palette.text, template.typography.bodyFont),
+          { x: 1.2, y: 3.0, w: 10.9, h: 2.8, fontSize: 20, valign: 'top' }
+        );
       }
       break;
     }
     case 'chart-right': {
       addKeyMessageBlock(slide, plan, template);
-      slide.addText(bulletsToText(plan.bullets), {
-        x: 0.6,
-        y: 2.65,
-        w: 6.25,
-        h: 3.75,
-        fontFace: template.typography.bodyFont,
-        fontSize: 17,
-        color: template.palette.text,
-        fit: 'shrink',
-      });
+      if (plan.bullets.length > 0) {
+        slide.addText(
+          makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
+          { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: 15, fit: 'shrink' }
+        );
+      }
       const hasChart = addChartIfAvailable(pptx, slide, plan, template);
       if (!hasChart) {
         const hasImage = addImageToRightPanel(slide, plan);
@@ -282,26 +284,18 @@ function renderSlideByLayout(
     case 'content-two-column': {
       addKeyMessageBlock(slide, plan, template);
       const [left, right] = splitTwoColumns(plan.bullets);
-      slide.addText(bulletsToText(left), {
-        x: 0.65,
-        y: 2.65,
-        w: 5.9,
-        h: 3.7,
-        fontFace: template.typography.bodyFont,
-        fontSize: 17,
-        color: template.palette.text,
-        fit: 'shrink',
-      });
-      slide.addText(bulletsToText(right), {
-        x: 6.85,
-        y: 2.65,
-        w: 5.9,
-        h: 3.7,
-        fontFace: template.typography.bodyFont,
-        fontSize: 17,
-        color: template.palette.text,
-        fit: 'shrink',
-      });
+      if (left.length > 0) {
+        slide.addText(
+          makeBulletRuns(left, template.palette.text, template.typography.bodyFont),
+          { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
+        );
+      }
+      if (right.length > 0) {
+        slide.addText(
+          makeBulletRuns(right, template.palette.text, template.typography.bodyFont),
+          { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
+        );
+      }
       break;
     }
     case 'conclusion-focus': {
@@ -314,34 +308,34 @@ function renderSlideByLayout(
         line: { color: template.palette.divider, pt: 1 },
         fill: { color: template.palette.surface },
       });
-      const conclusionText = plan.bullets.length > 0 ? bulletsToText(plan.bullets) : plan.keyMessage;
-      slide.addText(conclusionText, {
-        x: 1.25,
-        y: 3.15,
-        w: 10.8,
-        h: 1.9,
-        align: 'center',
-        valign: 'middle',
-        fontFace: template.typography.bodyFont,
-        fontSize: 20,
-        color: template.palette.text,
-        fit: 'shrink',
-      });
+      const conclusionText = plan.bullets.length > 0
+        ? plan.bullets.join('\n')
+        : (plan.keyMessage || '');
+      if (conclusionText) {
+        slide.addText(conclusionText, {
+          x: 1.25,
+          y: 3.15,
+          w: 10.8,
+          h: 1.9,
+          align: 'center',
+          valign: 'middle',
+          fontFace: template.typography.bodyFont,
+          fontSize: 20,
+          color: template.palette.text,
+          fit: 'shrink',
+        });
+      }
       break;
     }
     case 'content-single-column':
     default: {
       addKeyMessageBlock(slide, plan, template);
-      slide.addText(bulletsToText(plan.bullets), {
-        x: 0.65,
-        y: 2.65,
-        w: 12.1,
-        h: 3.8,
-        fontFace: template.typography.bodyFont,
-        fontSize: 18,
-        color: template.palette.text,
-        fit: 'shrink',
-      });
+      if (plan.bullets.length > 0) {
+        slide.addText(
+          makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
+          { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: 16, fit: 'shrink' }
+        );
+      }
       break;
     }
   }
