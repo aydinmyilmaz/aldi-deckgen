@@ -14,6 +14,7 @@ function truncateBullets(plan: SlideRenderPlan): SlideRenderPlan {
     plan.layout === 'content-two-column' ? MAX_BULLETS_TWO_COL :
     plan.layout === 'chart-right' ? MAX_BULLETS_CHART_RIGHT :
     plan.layout === 'agenda-list' ? MAX_BULLETS_AGENDA :
+    plan.layout === 'conclusion-focus' || plan.layout === 'title-focus' || plan.layout === 'quote-callout' ? MAX_BULLETS_TWO_COL :
     MAX_BULLETS_DEFAULT;
 
   if (plan.bullets.length <= maxBullets) return plan;

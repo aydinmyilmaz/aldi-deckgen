@@ -447,6 +447,7 @@ function renderSlideByLayout(
       break;
     }
     case 'agenda-list': {
+      addKeyMessageBlock(slide, plan, template);
       const items = plan.bullets.slice(0, 8);
       const colCount = items.length > 4 ? 2 : 1;
       const colWidth = colCount === 2 ? 5.8 : 12.0;
