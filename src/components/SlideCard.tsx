@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import { ChevronDown, ChevronUp, GripVertical, PencilLine, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, GripVertical, ImagePlus, Loader2, PencilLine, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SlideOutline } from '@/types';
 
@@ -11,11 +11,21 @@ interface Props {
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   onUpdate: (updated: SlideOutline) => void;
   onDelete: (id: string) => void;
+  onImageRefresh: (slide: SlideOutline, mode: 'refresh' | 'generate') => Promise<void>;
+  imageActionsDisabled?: boolean;
 }
 
-export function SlideCard({ slide, dragHandleProps, onUpdate, onDelete }: Props) {
+export function SlideCard({
+  slide,
+  dragHandleProps,
+  onUpdate,
+  onDelete,
+  onImageRefresh,
+  imageActionsDisabled,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
   const [draft, setDraft] = useState(slide);
 
   function save() {
@@ -26,6 +36,15 @@ export function SlideCard({ slide, dragHandleProps, onUpdate, onDelete }: Props)
   function cancel() {
     setDraft(slide);
     setEditing(false);
+  }
+
+  async function handleImageAction(mode: 'refresh' | 'generate') {
+    setImageLoading(true);
+    try {
+      await onImageRefresh(slide, mode);
+    } finally {
+      setImageLoading(false);
+    }
   }
 
   return (
@@ -116,6 +135,68 @@ export function SlideCard({ slide, dragHandleProps, onUpdate, onDelete }: Props)
             <span className="font-semibold text-foreground">Visual:</span> {slide.visualSuggestion}
           </p>
         )}
+      </div>
+
+      <div className="w-52 flex-none space-y-2">
+        <div className="overflow-hidden rounded-xl border border-border/80 bg-slate-50/70">
+          {slide.imageThumbUrl || slide.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={slide.imageThumbUrl || slide.imageUrl}
+              alt={slide.imageAlt || `${slide.title} image`}
+              className="h-28 w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-28 items-center justify-center text-muted-foreground">
+              <ImagePlus className="size-5" />
+            </div>
+          )}
+        </div>
+
+        {slide.imageQuery && (
+          <p className="line-clamp-2 text-[11px] text-muted-foreground">
+            Query: <span className="font-medium text-foreground">{slide.imageQuery}</span>
+          </p>
+        )}
+
+        {slide.imagePexelsUrl && (
+          <a
+            href={slide.imagePexelsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            Source
+            <ExternalLink className="size-3" />
+          </a>
+        )}
+
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 flex-1"
+            onClick={() => void handleImageAction(slide.imageUrl ? 'refresh' : 'generate')}
+            disabled={imageLoading || imageActionsDisabled}
+          >
+            {imageLoading ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Loading
+              </>
+            ) : slide.imageUrl ? (
+              <>
+                <RefreshCw className="size-3.5" />
+                Refresh
+              </>
+            ) : (
+              <>
+                <ImagePlus className="size-3.5" />
+                Generate
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <button

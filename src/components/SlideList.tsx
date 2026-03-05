@@ -7,9 +7,11 @@ import type { SlideOutline } from '@/types';
 interface Props {
   slides: SlideOutline[];
   onChange: (slides: SlideOutline[]) => void;
+  onImageRefresh: (slide: SlideOutline, mode: 'refresh' | 'generate') => Promise<void>;
+  imageActionsDisabled?: boolean;
 }
 
-export function SlideList({ slides, onChange }: Props) {
+export function SlideList({ slides, onChange, onImageRefresh, imageActionsDisabled }: Props) {
   function onDragEnd(result: DropResult) {
     if (!result.destination) return;
     const reordered = Array.from(slides);
@@ -52,6 +54,8 @@ export function SlideList({ slides, onChange }: Props) {
                       dragHandleProps={provided.dragHandleProps}
                       onUpdate={handleUpdate}
                       onDelete={handleDelete}
+                      onImageRefresh={onImageRefresh}
+                      imageActionsDisabled={imageActionsDisabled}
                     />
                   </div>
                 )}

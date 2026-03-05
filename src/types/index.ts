@@ -1,6 +1,7 @@
 export type Tone = 'Standard' | 'Professional' | 'Casual' | 'Academic';
 export type Language = 'English' | 'Turkish' | 'Spanish' | 'French' | 'German';
 export type Purpose = 'inform' | 'align' | 'decide' | 'sell';
+export type ImageIntent = 'none' | 'optional' | 'required';
 
 export type SlideType =
   | 'title'          // Slide 1: title, author, org, date
@@ -26,6 +27,7 @@ export interface PresentationConfig {
   audience: string;
   purpose: Purpose;
   useLlmExtraction: boolean; // NEW
+  useRelatedImages: boolean; // NEW
 }
 
 export interface ExtractedSlideContent {
@@ -43,6 +45,15 @@ export interface SlideOutline {
   keyMessage?: string;
   speakerNotes?: string;
   visualSuggestion?: string;
+  imageIntent?: ImageIntent;
+  imageQuery?: string;
+  imageUrl?: string;
+  imageThumbUrl?: string;
+  imageAlt?: string;
+  imagePhotographer?: string;
+  imagePhotographerUrl?: string;
+  imagePexelsUrl?: string;
+  imageAttributionLine?: string;
 }
 
 export interface GenerateRequest {

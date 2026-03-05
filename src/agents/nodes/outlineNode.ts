@@ -1,6 +1,7 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { createLLM } from '@/lib/llm';
 import { getPresentationGuidelines } from '@/lib/presentationGuidelines';
+import { normalizeOutlineBlueprint } from '../slideTypeUtils';
 import type { PipelineState } from '../state';
 
 export async function outlineNode(
@@ -26,7 +27,8 @@ export async function outlineNode(
       `- Slides 2 to ${config.slideCount - 1}: assign the most appropriate type for the content from this list:\n` +
       `  agenda, background, problem, objectives, method, findings, solution, implementation, benefits, content\n` +
       `  Choose based on what that slide covers. Not every type must be used — pick what fits.\n` +
-      `- Slide ${config.slideCount}: type "conclusion" unless the deck ends with Q&A (type "qna") or sources (type "references").\n` +
+      `- You MUST include at least one slide with type "content" in slides 2 to ${config.slideCount - 1}.\n` +
+      `- Slide ${config.slideCount}: type "conclusion".\n` +
       `\n\n${guidelines}` +
       `\n\nStyle DNA:\n${styleDna}` +
       topicHints +
@@ -40,5 +42,6 @@ export async function outlineNode(
 
   const raw = (response.content as string).trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
   const parsed = JSON.parse(raw);
-  return { slideTitles: parsed.slides };
+  const normalizedSlideTitles = normalizeOutlineBlueprint(parsed.slides, config.slideCount);
+  return { slideTitles: normalizedSlideTitles };
 }

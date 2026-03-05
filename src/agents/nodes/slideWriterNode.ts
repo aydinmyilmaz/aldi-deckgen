@@ -1,6 +1,7 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { createLLM } from '@/lib/llm';
 import { getPresentationGuidelines, getSlideTypeRules } from '@/lib/presentationGuidelines';
+import { normalizeSlideType } from '../slideTypeUtils';
 import { v4 as uuidv4 } from 'uuid';
 import type { PipelineState } from '../state';
 import type { SlideOutline, SlideType } from '@/types';
@@ -56,6 +57,9 @@ export async function slideWriterNode(
 
   const raw = (response.content as string).trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
   const parsed = JSON.parse(raw);
+  const expectedTypeByIndex = new Map(
+    slideTitles.map((slide) => [slide.index, normalizeSlideType(slide.slideType)])
+  );
   const slides: SlideOutline[] = (
     parsed.slides as Array<{
       index: number;
@@ -69,7 +73,7 @@ export async function slideWriterNode(
   ).map((s) => ({
     ...s,
     id: uuidv4(),
-    slideType: (s.slideType ?? 'content') as SlideType,
+    slideType: (expectedTypeByIndex.get(s.index) ?? normalizeSlideType(s.slideType)) as SlideType,
   }));
 
   return { slides };

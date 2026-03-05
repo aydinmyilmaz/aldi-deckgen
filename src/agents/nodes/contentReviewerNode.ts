@@ -29,6 +29,28 @@ export function contentReviewerNode(
 ): Partial<PipelineState> {
   const { slides, reviewAttempts, config } = state;
   const issues: string[] = [];
+  const sortedSlides = [...slides].sort((a, b) => a.index - b.index);
+
+  const firstSlide = sortedSlides.find((slide) => slide.index === 1) ?? sortedSlides[0];
+  if (firstSlide && firstSlide.slideType !== 'title') {
+    issues.push(`Slide 1 must be [title], got [${firstSlide.slideType}].`);
+  }
+
+  const lastSlide =
+    sortedSlides.find((slide) => slide.index === config.slideCount) ??
+    sortedSlides[sortedSlides.length - 1];
+  if (lastSlide && lastSlide.slideType !== 'conclusion') {
+    issues.push(`Final slide must be [conclusion], got [${lastSlide.slideType}].`);
+  }
+
+  if (config.slideCount >= 3) {
+    const middleSlides = sortedSlides.filter(
+      (slide) => slide.index > 1 && slide.index < config.slideCount
+    );
+    if (middleSlides.length > 0 && !middleSlides.some((slide) => slide.slideType === 'content')) {
+      issues.push(`Slides 2-${config.slideCount - 1} must include at least one [content] slide.`);
+    }
+  }
 
   for (const slide of slides) {
     const type = slide.slideType ?? 'content';

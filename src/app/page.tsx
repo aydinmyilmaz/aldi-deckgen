@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { FileStack, LayoutTemplate, Loader2, Sparkles, WandSparkles } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Download, FileStack, LayoutTemplate, Loader2, Sparkles, WandSparkles } from 'lucide-react';
 import { ConfigBar } from '@/components/ConfigBar';
 import { FileUpload } from '@/components/FileUpload';
 import { SlideList } from '@/components/SlideList';
+import { TemplatePicker } from '@/components/TemplatePicker';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import type { PresentationConfig, SlideOutline } from '@/types';
+import type { DeckTemplateId } from '@/types/render';
 
 const DEFAULT_CONFIG: PresentationConfig = {
   tone: 'Standard',
@@ -18,6 +20,7 @@ const DEFAULT_CONFIG: PresentationConfig = {
   audience: '',
   purpose: 'inform',
   useLlmExtraction: false,
+  useRelatedImages: false,
 };
 
 type Stage = 'input' | 'generating' | 'slides';
@@ -28,6 +31,7 @@ const STAGE_LABELS: Record<string, { label: string; hint: string }> = {
   contentStructure:   { label: 'Identifying key themes…',     hint: 'Finding main topics and supporting points' },
   outline:            { label: 'Building slide outline…',     hint: 'Structuring the flow and titling slides' },
   slideWriter:        { label: 'Writing slide content…',      hint: 'Creating bullets, key messages & speaker notes' },
+  imageQueryPlanner:  { label: 'Planning related images…',    hint: 'Generating search queries for optional slide visuals' },
   contentReviewer:    { label: 'Reviewing quality…',          hint: 'Checking rules — may trigger a revision pass' },
 };
 
@@ -35,8 +39,11 @@ export default function Home() {
   const [config, setConfig] = useState<PresentationConfig>(DEFAULT_CONFIG);
   const [documentText, setDocumentText] = useState('');
   const [slides, setSlides] = useState<SlideOutline[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<DeckTemplateId>('reveal-black');
   const [stage, setStage] = useState<Stage>('input');
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const templateSectionRef = useRef<HTMLElement | null>(null);
   const [stageInfo, setStageInfo] = useState<{ label: string; hint: string; step: number }>({
     label: 'Starting…', hint: '', step: 0,
   });
@@ -94,6 +101,89 @@ export default function Home() {
     }
   }
 
+  async function exportPptx() {
+    if (slides.length === 0) {
+      setError('No slides to export.');
+      return;
+    }
+
+    setError(null);
+    setIsExporting(true);
+
+    try {
+      const firstTitle = slides.find((slide) => slide.index === 1)?.title ?? 'presentation';
+      const res = await fetch('/api/render', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slides,
+          config,
+          templateId: selectedTemplateId,
+          fileName: firstTitle,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? 'Failed to render PPTX');
+      }
+
+      const blob = await res.blob();
+      const contentDisposition = res.headers.get('Content-Disposition') ?? '';
+      const match = contentDisposition.match(/filename="(.+)"/i);
+      const fileName = match?.[1] ?? 'presentation.pptx';
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  function focusTemplateSection() {
+    templateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function handleSlideImageRefresh(slide: SlideOutline, mode: 'refresh' | 'generate') {
+    try {
+      const res = await fetch('/api/slide-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slide, mode }),
+      });
+      const data = await res.json().catch(() => ({} as Record<string, unknown>));
+      if (!res.ok) {
+        throw new Error((data as { error?: string }).error ?? 'Failed to load slide image');
+      }
+
+      const image = (data as { image?: Partial<SlideOutline> }).image;
+      if (!image) {
+        throw new Error('No image returned');
+      }
+
+      setSlides((current) =>
+        current.map((item) =>
+          item.id === slide.id
+            ? {
+                ...item,
+                ...image,
+              }
+            : item
+        )
+      );
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   return (
     <main className="min-h-screen">
       <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -141,32 +231,66 @@ export default function Home() {
             </section>
 
             <section className="surface-card hover-lift p-6 sm:p-8">
-              <label className="flex items-center justify-between cursor-pointer">
+              <div className="space-y-5">
                 <div>
                   <p className="section-label">Enhancement</p>
-                  <p className="mt-1 text-xl font-semibold text-foreground">AI Content Extraction</p>
-                  <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                    Use GPT to organize the document into per-slide content blocks before generating.
-                  </p>
+                  <p className="mt-1 text-xl font-semibold text-foreground">AI Enhancements</p>
                 </div>
-                <button
-                  role="switch"
-                  aria-checked={config.useLlmExtraction}
-                  onClick={() => setConfig({ ...config, useLlmExtraction: !config.useLlmExtraction })}
-                  disabled={stage === 'generating'}
-                  className={`
+
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">AI Content Extraction</p>
+                    <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                      Use GPT to organize the document into per-slide content blocks before generating.
+                    </p>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={config.useLlmExtraction}
+                    onClick={() => setConfig({ ...config, useLlmExtraction: !config.useLlmExtraction })}
+                    disabled={stage === 'generating'}
+                    className={`
                     subtle-ring relative inline-flex h-8 w-14 items-center rounded-full transition-colors disabled:opacity-50
                     ${config.useLlmExtraction ? 'bg-primary' : 'bg-slate-300'}
                   `}
-                >
-                  <span
-                    className={`
+                  >
+                    <span
+                      className={`
                       inline-block h-6 w-6 transform rounded-full bg-white shadow-[0_4px_10px_rgba(15,23,42,0.2)] transition-transform
                       ${config.useLlmExtraction ? 'translate-x-7' : 'translate-x-1'}
                     `}
-                  />
-                </button>
-              </label>
+                    />
+                  </button>
+                </label>
+
+                <Separator className="bg-border/60" />
+
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">Related Images (Pexels)</p>
+                    <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                      Ask AI to generate per-slide image search queries for optional visual enrichment.
+                    </p>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={config.useRelatedImages}
+                    onClick={() => setConfig({ ...config, useRelatedImages: !config.useRelatedImages })}
+                    disabled={stage === 'generating'}
+                    className={`
+                    subtle-ring relative inline-flex h-8 w-14 items-center rounded-full transition-colors disabled:opacity-50
+                    ${config.useRelatedImages ? 'bg-primary' : 'bg-slate-300'}
+                  `}
+                  >
+                    <span
+                      className={`
+                      inline-block h-6 w-6 transform rounded-full bg-white shadow-[0_4px_10px_rgba(15,23,42,0.2)] transition-transform
+                      ${config.useRelatedImages ? 'translate-x-7' : 'translate-x-1'}
+                    `}
+                    />
+                  </button>
+                </label>
+              </div>
             </section>
 
             <section className="surface-card hover-lift p-6 sm:p-8">
@@ -217,13 +341,43 @@ export default function Home() {
                 <FileStack className="size-4" />
                 Outline &amp; Content
               </div>
-              <div className="flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-muted-foreground">
+              <button
+                type="button"
+                onClick={focusTemplateSection}
+                className="flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-white/70 hover:text-foreground"
+              >
                 <LayoutTemplate className="size-4" />
-                Select Template
-              </div>
+                Select Template ↓
+              </button>
             </div>
 
-            <SlideList slides={slides} onChange={setSlides} />
+            {error && (
+              <p className="rounded-2xl border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                {error}
+              </p>
+            )}
+
+            <SlideList
+              slides={slides}
+              onChange={setSlides}
+              onImageRefresh={handleSlideImageRefresh}
+              imageActionsDisabled={isExporting}
+            />
+
+            <section ref={templateSectionRef} className="surface-card hover-lift p-5 sm:p-6">
+              <div className="mb-4">
+                <p className="section-label">Template</p>
+                <h3 className="mt-1 text-xl font-semibold text-foreground">Select a Slide Design</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This is the active selector. Pick one template, then export your .pptx.
+                </p>
+              </div>
+              <TemplatePicker
+                selectedTemplateId={selectedTemplateId}
+                onSelect={setSelectedTemplateId}
+                disabled={isExporting}
+              />
+            </section>
 
             <Separator className="bg-border/70" />
 
@@ -231,8 +385,18 @@ export default function Home() {
               <Button variant="outline" onClick={() => setStage('input')}>
                 ← Back
               </Button>
-              <Button className="h-11 flex-1 text-base" disabled>
-                Select a Template
+              <Button className="h-11 flex-1 text-base" onClick={exportPptx} disabled={isExporting}>
+                {isExporting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Building deck...
+                  </>
+                ) : (
+                  <>
+                    <Download className="size-4" />
+                    Export .pptx
+                  </>
+                )}
               </Button>
             </div>
           </div>
