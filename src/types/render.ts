@@ -50,7 +50,9 @@ export type RenderLayoutKind =
   | 'content-single-column'
   | 'content-two-column'
   | 'chart-right'
-  | 'conclusion-focus';
+  | 'conclusion-focus'
+  | 'agenda-list'
+  | 'quote-callout';
 
 export type ChartKind = 'bar' | 'pie' | 'line';
 

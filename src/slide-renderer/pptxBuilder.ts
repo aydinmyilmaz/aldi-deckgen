@@ -332,6 +332,98 @@ function renderSlideByLayout(
       }
       break;
     }
+    case 'agenda-list': {
+      const items = plan.bullets.slice(0, 8);
+      const colCount = items.length > 4 ? 2 : 1;
+      const colWidth = colCount === 2 ? 5.8 : 12.0;
+      const xOffsets = colCount === 2 ? [0.55, 6.75] : [0.65];
+      const rowH = 0.72;
+      const startY = 1.9;
+      const gap = 0.18;
+
+      items.forEach((item, i) => {
+        const col = colCount === 2 ? i % 2 : 0;
+        const row = colCount === 2 ? Math.floor(i / 2) : i;
+        const x = xOffsets[col];
+        const y = startY + row * (rowH + gap);
+
+        // number badge circle
+        slide.addShape(pptx.ShapeType.ellipse, {
+          x,
+          y: y + 0.06,
+          w: 0.5,
+          h: 0.5,
+          line: { color: template.palette.accent, pt: 0 },
+          fill: { color: template.palette.accent },
+        });
+        slide.addText(`${i + 1}`, {
+          x,
+          y: y + 0.06,
+          w: 0.5,
+          h: 0.5,
+          align: 'center',
+          valign: 'middle',
+          fontFace: template.typography.bodyFont,
+          fontSize: 14,
+          bold: true,
+          color: template.palette.background,
+        });
+
+        // item text
+        slide.addText(item.trim(), {
+          x: x + 0.62,
+          y,
+          w: colWidth - 0.72,
+          h: rowH,
+          fontFace: template.typography.bodyFont,
+          fontSize: 16,
+          color: template.palette.text,
+          valign: 'middle',
+          fit: 'shrink',
+        });
+      });
+      break;
+    }
+    case 'quote-callout': {
+      // Left accent bar
+      slide.addShape(pptx.ShapeType.rect, {
+        x: 0.5,
+        y: 1.72,
+        w: 0.22,
+        h: 2.1,
+        line: { color: template.palette.accent, pt: 0 },
+        fill: { color: template.palette.accent },
+      });
+
+      // Large italic quote (keyMessage, or first bullet if no keyMessage)
+      const quoteText = plan.keyMessage || plan.bullets[0] || '';
+      if (quoteText) {
+        slide.addText(quoteText, {
+          x: 0.9,
+          y: 1.68,
+          w: 11.9,
+          h: 2.15,
+          fontFace: template.typography.titleFont,
+          fontSize: 26,
+          bold: false,
+          italic: true,
+          color: template.palette.text,
+          valign: 'middle',
+          fit: 'shrink',
+        });
+      }
+
+      // Supporting bullets below
+      const supportingBullets = plan.keyMessage ? plan.bullets : plan.bullets.slice(1);
+      if (supportingBullets.length > 0) {
+        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        slide.addText(
+          makeBulletRuns(supportingBullets, template.palette.mutedText, template.typography.bodyFont),
+          { x: 0.9, y: 4.1, w: 11.9, h: 2.8, fontSize: 15, fit: 'shrink' }
+        );
+      }
+      break;
+    }
     case 'content-single-column':
     default: {
       addKeyMessageBlock(slide, plan, template);
