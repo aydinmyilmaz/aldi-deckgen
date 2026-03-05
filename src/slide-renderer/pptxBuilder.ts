@@ -3,6 +3,91 @@ import type { SlideOutline } from '@/types';
 import type { DeckTemplate, SlideRenderPlan } from '@/types/render';
 
 const SLIDE_WIDTH = 13.333;
+const POINTS_PER_INCH = 72;
+
+type FitTextOptions = {
+  text: string;
+  boxW: number;
+  boxH: number;
+  minFont: number;
+  maxFont: number;
+  lineHeight?: number;
+  isBold?: boolean;
+  paddingX?: number;
+  paddingY?: number;
+};
+
+function estimateWrappedLineCount(text: string, fontSize: number, boxW: number, isBold: boolean): number {
+  const sanitized = text.replace(/\r/g, '').trim();
+  if (!sanitized) return 1;
+
+  const paragraphs = sanitized.split('\n');
+  const avgCharWidthFactor = isBold ? 0.56 : 0.52;
+  const usableW = Math.max(boxW, 0.2);
+  const charsPerLine = Math.max(
+    1,
+    Math.floor((usableW * POINTS_PER_INCH) / Math.max(fontSize * avgCharWidthFactor, 0.1))
+  );
+
+  let lines = 0;
+  for (const paragraph of paragraphs) {
+    const words = paragraph.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      lines += 1;
+      continue;
+    }
+    let currentLineLen = 0;
+    let paragraphLines = 1;
+    for (const word of words) {
+      const nextLen = currentLineLen === 0 ? word.length : currentLineLen + 1 + word.length;
+      if (nextLen <= charsPerLine) {
+        currentLineLen = nextLen;
+      } else {
+        paragraphLines += 1;
+        currentLineLen = word.length;
+      }
+    }
+    lines += paragraphLines;
+  }
+
+  return Math.max(lines, 1);
+}
+
+function computeFontSizeForBox(options: FitTextOptions): number {
+  const {
+    text,
+    boxW,
+    boxH,
+    minFont,
+    maxFont,
+    lineHeight = 1.24,
+    isBold = false,
+    paddingX = 0.06,
+    paddingY = 0.04,
+  } = options;
+
+  const usableW = Math.max(0.2, boxW - paddingX * 2);
+  const usableH = Math.max(0.2, boxH - paddingY * 2);
+  let low = Math.max(6, Math.floor(minFont));
+  let high = Math.max(low, Math.floor(maxFont));
+  let best = low;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const wrappedLines = estimateWrappedLineCount(text, mid, usableW, isBold);
+    const neededH = wrappedLines * mid * lineHeight;
+    const availableH = usableH * POINTS_PER_INCH;
+
+    if (neededH <= availableH) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best;
+}
 
 function makeBulletRuns(
   bullets: string[],
@@ -74,16 +159,25 @@ function applySlideShell(
     color: template.palette.mutedText,
   });
 
+  const titleFontSize = computeFontSizeForBox({
+    text: title,
+    boxW: 12.2,
+    boxH: 1.05,
+    minFont: plan.layout === 'title-focus' ? 28 : 22,
+    maxFont: plan.layout === 'title-focus' ? 40 : 30,
+    lineHeight: 1.12,
+    isBold: true,
+  });
+
   slide.addText(title, {
     x: 0.5,
     y: 0.56,
     w: 12.2,
     h: 1.05,
     fontFace: template.typography.titleFont,
-    fontSize: plan.layout === 'title-focus' ? 40 : 30,
+    fontSize: titleFontSize,
     bold: true,
     color: template.palette.text,
-    fit: 'shrink',
   });
 
   addSlideTypeAccent(pptx, slide, plan, template);
@@ -181,16 +275,26 @@ function addKeyMessageBlock(slide: PptxGenJS.Slide, plan: SlideRenderPlan, templ
     fill: { color: template.palette.accentSoft },
   });
 
+  const keyMessageFontSize = computeFontSizeForBox({
+    text: plan.keyMessage,
+    boxW: 11.8,
+    boxH: 0.3,
+    minFont: 11,
+    maxFont: 16,
+    lineHeight: 1.1,
+    isBold: true,
+    paddingY: 0,
+  });
+
   slide.addText(plan.keyMessage, {
     x: 0.76,
     y: 1.95,
     w: 11.8,
     h: 0.3,
     fontFace: template.typography.bodyFont,
-    fontSize: 16,
+    fontSize: keyMessageFontSize,
     bold: true,
     color: template.palette.text,
-    fit: 'shrink',
   });
 }
 
@@ -339,23 +443,38 @@ function renderSlideByLayout(
       });
 
       if (plan.bullets.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const titleBullets = plan.bullets.slice(0, 4);
+        const titleBulletsFontSize = computeFontSizeForBox({
+          text: titleBullets.join('\n'),
+          boxW: 10.9,
+          boxH: 2.8,
+          minFont: 14,
+          maxFont: 20,
+          lineHeight: 1.28,
+        });
         slide.addText(
-          makeBulletRuns(plan.bullets.slice(0, 4), template.palette.text, template.typography.bodyFont),
-          { x: 1.2, y: 3.0, w: 10.9, h: 2.8, fontSize: 20, valign: 'top' }
+          makeBulletRuns(titleBullets, template.palette.text, template.typography.bodyFont),
+          { x: 1.2, y: 3.0, w: 10.9, h: 2.8, fontSize: titleBulletsFontSize, valign: 'top' }
         );
       } else if (plan.speakerNotes) {
         // Fallback: show speaker notes as italic subtitle when no bullets
+        const notesFontSize = computeFontSizeForBox({
+          text: plan.speakerNotes,
+          boxW: 10.9,
+          boxH: 1.8,
+          minFont: 13,
+          maxFont: 18,
+          lineHeight: 1.28,
+        });
         slide.addText(plan.speakerNotes, {
           x: 1.2,
           y: 3.1,
           w: 10.9,
           h: 1.8,
           fontFace: template.typography.bodyFont,
-          fontSize: 18,
+          fontSize: notesFontSize,
           color: template.palette.mutedText,
           italic: true,
-          fit: 'shrink',
         });
       }
       break;
@@ -363,10 +482,19 @@ function renderSlideByLayout(
     case 'chart-right': {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const bulletsText = plan.bullets.join('\n');
+        const bulletsFontSize = computeFontSizeForBox({
+          text: bulletsText,
+          boxW: 6.25,
+          boxH: 3.75,
+          minFont: 11,
+          maxFont: 15,
+          lineHeight: 1.28,
+        });
+        // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
-          { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: 15, fit: 'shrink' }
+          { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: bulletsFontSize }
         );
       }
       const hasChart = addChartIfAvailable(pptx, slide, plan, template);
@@ -401,17 +529,33 @@ function renderSlideByLayout(
       addKeyMessageBlock(slide, plan, template);
       const [left, right] = splitTwoColumns(plan.bullets);
       if (left.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const leftFontSize = computeFontSizeForBox({
+          text: left.join('\n'),
+          boxW: 5.9,
+          boxH: 3.7,
+          minFont: 11,
+          maxFont: 15,
+          lineHeight: 1.28,
+        });
+        // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(left, template.palette.text, template.typography.bodyFont),
-          { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
+          { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: leftFontSize }
         );
       }
       if (right.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const rightFontSize = computeFontSizeForBox({
+          text: right.join('\n'),
+          boxW: 5.9,
+          boxH: 3.7,
+          minFont: 11,
+          maxFont: 15,
+          lineHeight: 1.28,
+        });
+        // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(right, template.palette.text, template.typography.bodyFont),
-          { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: 15, fit: 'shrink' }
+          { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: rightFontSize }
         );
       }
       break;
@@ -430,6 +574,14 @@ function renderSlideByLayout(
         ? plan.bullets.join('\n')
         : (plan.keyMessage || '');
       if (conclusionText) {
+        const conclusionFontSize = computeFontSizeForBox({
+          text: conclusionText,
+          boxW: 10.8,
+          boxH: 1.9,
+          minFont: 14,
+          maxFont: 20,
+          lineHeight: 1.26,
+        });
         // Conclusion is a statement — plain text, no bullet runs
         slide.addText(conclusionText, {
           x: 1.25,
@@ -439,9 +591,8 @@ function renderSlideByLayout(
           align: 'center',
           valign: 'middle',
           fontFace: template.typography.bodyFont,
-          fontSize: 20,
+          fontSize: conclusionFontSize,
           color: template.palette.text,
-          fit: 'shrink',
         });
       }
       break;
@@ -485,16 +636,23 @@ function renderSlideByLayout(
         });
 
         // item text
+        const agendaItemFontSize = computeFontSizeForBox({
+          text: item.trim(),
+          boxW: colWidth - 0.72,
+          boxH: rowH,
+          minFont: 11,
+          maxFont: 16,
+          lineHeight: 1.18,
+        });
         slide.addText(item.trim(), {
           x: x + 0.62,
           y,
           w: colWidth - 0.72,
           h: rowH,
           fontFace: template.typography.bodyFont,
-          fontSize: 16,
+          fontSize: agendaItemFontSize,
           color: template.palette.text,
           valign: 'middle',
-          fit: 'shrink',
         });
       });
       break;
@@ -513,28 +671,43 @@ function renderSlideByLayout(
       // Large italic quote (keyMessage, or first bullet if no keyMessage)
       const quoteText = plan.keyMessage || plan.bullets[0] || '';
       if (quoteText) {
+        const quoteFontSize = computeFontSizeForBox({
+          text: quoteText,
+          boxW: 11.9,
+          boxH: 2.15,
+          minFont: 16,
+          maxFont: 26,
+          lineHeight: 1.22,
+        });
         slide.addText(quoteText, {
           x: 0.9,
           y: 1.68,
           w: 11.9,
           h: 2.15,
           fontFace: template.typography.titleFont,
-          fontSize: 26,
+          fontSize: quoteFontSize,
           bold: false,
           italic: true,
           color: template.palette.text,
           valign: 'middle',
-          fit: 'shrink',
         });
       }
 
       // Supporting bullets below
       const supportingBullets = plan.keyMessage ? plan.bullets : plan.bullets.slice(1);
       if (supportingBullets.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const supportingFontSize = computeFontSizeForBox({
+          text: supportingBullets.join('\n'),
+          boxW: 11.9,
+          boxH: 2.8,
+          minFont: 10,
+          maxFont: 15,
+          lineHeight: 1.28,
+        });
+        // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(supportingBullets, template.palette.mutedText, template.typography.bodyFont),
-          { x: 0.9, y: 4.1, w: 11.9, h: 2.8, fontSize: 15, fit: 'shrink' }
+          { x: 0.9, y: 4.1, w: 11.9, h: 2.8, fontSize: supportingFontSize }
         );
       }
       break;
@@ -551,6 +724,23 @@ function renderSlideByLayout(
 
       cards.slice(0, count).forEach((card, i) => {
         const x = startX + i * (cardW + 0.3);
+        const valueFontSize = computeFontSizeForBox({
+          text: card.value,
+          boxW: cardW - 0.3,
+          boxH: 1.5,
+          minFont: 28,
+          maxFont: 72,
+          lineHeight: 1.0,
+          isBold: true,
+        });
+        const labelFontSize = computeFontSizeForBox({
+          text: card.label,
+          boxW: cardW - 0.3,
+          boxH: 0.85,
+          minFont: 10,
+          maxFont: 14,
+          lineHeight: 1.2,
+        });
 
         // Card background
         slide.addShape(pptx.ShapeType.roundRect, {
@@ -570,10 +760,9 @@ function renderSlideByLayout(
           h: 1.5,
           align: 'center',
           fontFace: template.typography.titleFont,
-          fontSize: 72,
+          fontSize: valueFontSize,
           bold: true,
           color: template.palette.accent,
-          fit: 'shrink',
         });
 
         // Label
@@ -584,13 +773,20 @@ function renderSlideByLayout(
           h: 0.85,
           align: 'center',
           fontFace: template.typography.bodyFont,
-          fontSize: 14,
+          fontSize: labelFontSize,
           color: template.palette.text,
-          fit: 'shrink',
         });
 
         // Optional context footnote
         if (card.context) {
+          const contextFontSize = computeFontSizeForBox({
+            text: card.context,
+            boxW: cardW - 0.3,
+            boxH: 0.55,
+            minFont: 8,
+            maxFont: 10,
+            lineHeight: 1.15,
+          });
           slide.addText(card.context, {
             x: x + 0.15,
             y: cardY + 3.1,
@@ -598,10 +794,9 @@ function renderSlideByLayout(
             h: 0.55,
             align: 'center',
             fontFace: template.typography.bodyFont,
-            fontSize: 10,
+            fontSize: contextFontSize,
             color: template.palette.mutedText,
             italic: true,
-            fit: 'shrink',
           });
         }
       });
@@ -665,6 +860,15 @@ function renderSlideByLayout(
 
         const titleY = card.badge ? y + 0.65 : y + 0.22;
         const titleH = 0.55;
+        const cardTitleFontSize = computeFontSizeForBox({
+          text: card.title,
+          boxW: cardW - 0.36,
+          boxH: titleH,
+          minFont: 10,
+          maxFont: 15,
+          lineHeight: 1.16,
+          isBold: true,
+        });
 
         // Card title
         slide.addText(card.title, {
@@ -673,23 +877,30 @@ function renderSlideByLayout(
           w: cardW - 0.36,
           h: titleH,
           fontFace: template.typography.bodyFont,
-          fontSize: 15,
+          fontSize: cardTitleFontSize,
           bold: true,
           color: template.palette.text,
-          fit: 'shrink',
         });
 
         // Bullets
         if (card.bullets.length > 0) {
+          const bulletsBoxH = cardH - (titleY - y) - titleH - 0.2;
+          const cardBulletsFontSize = computeFontSizeForBox({
+            text: card.bullets.join('\n'),
+            boxW: cardW - 0.36,
+            boxH: bulletsBoxH,
+            minFont: 8,
+            maxFont: 11,
+            lineHeight: 1.28,
+          });
           slide.addText(
             makeBulletRuns(card.bullets.slice(0, 3), template.palette.mutedText, template.typography.bodyFont),
             {
               x: x + 0.18,
               y: titleY + titleH + 0.1,
               w: cardW - 0.36,
-              h: cardH - (titleY - y) - titleH - 0.2,
-              fontSize: 11,
-              fit: 'shrink',
+              h: bulletsBoxH,
+              fontSize: cardBulletsFontSize,
             }
           );
         }
@@ -752,10 +963,18 @@ function renderSlideByLayout(
     default: {
       addKeyMessageBlock(slide, plan, template);
       if (plan.bullets.length > 0) {
-        // fontSize on container so fit:'shrink' scales uniformly across all runs
+        const bodyFontSize = computeFontSizeForBox({
+          text: plan.bullets.join('\n'),
+          boxW: 12.1,
+          boxH: 3.8,
+          minFont: 11,
+          maxFont: 16,
+          lineHeight: 1.28,
+        });
+        // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
-          { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: 16, fit: 'shrink' }
+          { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: bodyFontSize }
         );
       }
       break;
