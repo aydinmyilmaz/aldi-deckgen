@@ -1,4 +1,4 @@
-import type { ImageIntent, PresentationConfig, SlideOutline, SlideType } from '@/types';
+import type { CardItem, ImageIntent, PresentationConfig, SlideOutline, SlideType, StatCard, TableData } from '@/types';
 
 export type DeckTemplateId =
   | 'reveal-black'
@@ -92,9 +92,9 @@ export interface SlideRenderPlan {
   selectedImageAlt?: string;
   selectedImageAttributionLine?: string;
   chart?: SlideChartSpec;
-  statCards?: { value: string; label: string; context?: string }[];
-  cardItems?: { badge?: string; title: string; bullets: string[] }[];
-  tableData?: { headers: string[]; rows: string[][] };
+  statCards?: StatCard[];
+  cardItems?: CardItem[];
+  tableData?: TableData;
   image?: SlideImageAsset;
 }
 
