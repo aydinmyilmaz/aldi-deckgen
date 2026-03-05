@@ -61,7 +61,7 @@ export async function structuredDataNode(
   }
 
   const updateByIndex = new Map(
-    parsed.results
+    (parsed.results ?? [])
       .filter((r) => r.type !== 'none')
       .map((r) => [r.index, r])
   );
