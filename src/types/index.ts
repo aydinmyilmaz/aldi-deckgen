@@ -54,6 +54,9 @@ export interface SlideOutline {
   imagePhotographerUrl?: string;
   imagePexelsUrl?: string;
   imageAttributionLine?: string;
+  statCards?: { value: string; label: string; context?: string }[];
+  cardItems?: { badge?: string; title: string; bullets: string[] }[];
+  tableData?: { headers: string[]; rows: string[][] };
 }
 
 export interface GenerateRequest {

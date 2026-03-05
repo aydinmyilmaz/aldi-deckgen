@@ -52,7 +52,10 @@ export type RenderLayoutKind =
   | 'chart-right'
   | 'conclusion-focus'
   | 'agenda-list'
-  | 'quote-callout';
+  | 'quote-callout'
+  | 'stats-highlight'
+  | 'card-grid'
+  | 'comparison-table';
 
 export type ChartKind = 'bar' | 'pie' | 'line';
 
@@ -89,6 +92,9 @@ export interface SlideRenderPlan {
   selectedImageAlt?: string;
   selectedImageAttributionLine?: string;
   chart?: SlideChartSpec;
+  statCards?: { value: string; label: string; context?: string }[];
+  cardItems?: { badge?: string; title: string; bullets: string[] }[];
+  tableData?: { headers: string[]; rows: string[][] };
   image?: SlideImageAsset;
 }
 
