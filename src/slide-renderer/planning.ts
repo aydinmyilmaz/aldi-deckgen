@@ -57,11 +57,11 @@ function chooseLayout(slide: SlideOutline, hasChart: boolean): RenderLayoutKind 
   if (slide.slideType === 'title') return 'title-focus';
   if (slide.slideType === 'agenda') return 'agenda-list';
   if (slide.slideType === 'conclusion' || slide.slideType === 'qna') return 'conclusion-focus';
-  if (slide.slideType === 'background' || slide.slideType === 'solution') {
-    if (slide.keyMessage && (slide.bullets?.length ?? 0) <= 3) return 'quote-callout';
-  }
   if (hasChart || slide.slideType === 'findings' || /chart|graph|trend|distribution|breakdown/i.test(slide.visualSuggestion ?? '')) {
     return 'chart-right';
+  }
+  if ((slide.slideType === 'background' || slide.slideType === 'solution') && slide.keyMessage && (slide.bullets?.length ?? 0) <= 3) {
+    return 'quote-callout';
   }
   if (slide.bullets.length >= 4) return 'content-two-column';
   return 'content-single-column';
