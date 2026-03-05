@@ -539,6 +539,74 @@ function renderSlideByLayout(
       }
       break;
     }
+    case 'stats-highlight': {
+      const cards = plan.statCards ?? [];
+      const count = Math.min(cards.length, 4);
+      if (count === 0) break;
+
+      const cardW = (12.3 - (count - 1) * 0.3) / count;
+      const startX = 0.5;
+      const cardY = 2.1;
+      const cardH = 3.8;
+
+      cards.slice(0, count).forEach((card, i) => {
+        const x = startX + i * (cardW + 0.3);
+
+        // Card background
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x,
+          y: cardY,
+          w: cardW,
+          h: cardH,
+          line: { color: template.palette.divider, pt: 1 },
+          fill: { color: template.palette.surface },
+        });
+
+        // Big value
+        slide.addText(card.value, {
+          x: x + 0.15,
+          y: cardY + 0.45,
+          w: cardW - 0.3,
+          h: 1.5,
+          align: 'center',
+          fontFace: template.typography.titleFont,
+          fontSize: 72,
+          bold: true,
+          color: template.palette.accent,
+          fit: 'shrink',
+        });
+
+        // Label
+        slide.addText(card.label, {
+          x: x + 0.15,
+          y: cardY + 2.1,
+          w: cardW - 0.3,
+          h: 0.85,
+          align: 'center',
+          fontFace: template.typography.bodyFont,
+          fontSize: 14,
+          color: template.palette.text,
+          fit: 'shrink',
+        });
+
+        // Optional context footnote
+        if (card.context) {
+          slide.addText(card.context, {
+            x: x + 0.15,
+            y: cardY + 3.1,
+            w: cardW - 0.3,
+            h: 0.55,
+            align: 'center',
+            fontFace: template.typography.bodyFont,
+            fontSize: 10,
+            color: template.palette.mutedText,
+            italic: true,
+            fit: 'shrink',
+          });
+        }
+      });
+      break;
+    }
     case 'content-single-column':
     default: {
       addKeyMessageBlock(slide, plan, template);
