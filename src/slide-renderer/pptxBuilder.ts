@@ -201,6 +201,16 @@ function addChartIfAvailable(
   if (!plan.chart) return false;
 
   const chartType = plan.chart.kind as 'bar' | 'pie' | 'line';
+  const chartColors = [
+    template.palette.accent,
+    '22C55E',
+    'F59E0B',
+    'EF4444',
+    '6366F1',
+    '0EA5E9',
+    'EC4899',
+    '14B8A6',
+  ];
 
   slide.addChart(
     chartType,
@@ -216,12 +226,27 @@ function addChartIfAvailable(
       y: 1.95,
       w: 5.7,
       h: 4.55,
+      // Data labels
+      showValue: true,
+      dataLabelFontSize: 11,
+      dataLabelColor: template.palette.text,
+      dataLabelPosition: chartType === 'pie' ? 'bestFit' : 'outEnd',
+      // Legend
       showLegend: plan.chart.labels.length <= 6,
       legendPos: 'b',
+      legendFontSize: 11,
+      legendColor: template.palette.mutedText,
+      // Title off — title is the slide title
       showTitle: false,
+      // Axis styling
       catAxisLabelColor: template.palette.mutedText,
+      catAxisLabelFontSize: 11,
       valAxisLabelColor: template.palette.mutedText,
-      chartColors: [template.palette.accent, '22C55E', 'F59E0B', 'EF4444', '6366F1'],
+      valAxisLabelFontSize: 11,
+      valGridLine: { style: 'none' },
+      // Colors
+      chartColors: chartColors.slice(0, Math.max(plan.chart.labels.length, 1)),
+      chartColorsOpacity: 90,
     } as Record<string, unknown>
   );
 
