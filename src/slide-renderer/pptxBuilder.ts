@@ -328,12 +328,35 @@ function renderSlideByLayout(
   switch (plan.layout) {
     case 'title-focus': {
       addKeyMessageBlock(slide, plan, template);
+
+      // Decorative accent separator line below keyMessage area
+      slide.addShape(pptx.ShapeType.line, {
+        x: 0.5,
+        y: 2.55,
+        w: 4.0,
+        h: 0,
+        line: { color: template.palette.accent, pt: 1.5 },
+      });
+
       if (plan.bullets.length > 0) {
         // fontSize on container so fit:'shrink' scales uniformly across all runs
         slide.addText(
           makeBulletRuns(plan.bullets.slice(0, 4), template.palette.text, template.typography.bodyFont),
           { x: 1.2, y: 3.0, w: 10.9, h: 2.8, fontSize: 20, valign: 'top' }
         );
+      } else if (plan.speakerNotes) {
+        // Fallback: show speaker notes as italic subtitle when no bullets
+        slide.addText(plan.speakerNotes, {
+          x: 1.2,
+          y: 3.1,
+          w: 10.9,
+          h: 1.8,
+          fontFace: template.typography.bodyFont,
+          fontSize: 18,
+          color: template.palette.mutedText,
+          italic: true,
+          fit: 'shrink',
+        });
       }
       break;
     }
