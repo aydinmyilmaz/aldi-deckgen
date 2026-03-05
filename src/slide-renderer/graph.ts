@@ -4,6 +4,7 @@ import { templateResolverNode } from '@/slide-renderer/nodes/templateResolverNod
 import { layoutPlannerNode } from '@/slide-renderer/nodes/layoutPlannerNode';
 import { chartPlannerNode } from '@/slide-renderer/nodes/chartPlannerNode';
 import { imageSearchNode } from '@/slide-renderer/nodes/imageSearchNode';
+import { renderQaNode } from '@/slide-renderer/nodes/renderQaNode';
 import { deckComposerNode } from '@/slide-renderer/nodes/deckComposerNode';
 
 const workflow = new StateGraph(SlideRenderState)
@@ -11,12 +12,14 @@ const workflow = new StateGraph(SlideRenderState)
   .addNode('planLayout', layoutPlannerNode)
   .addNode('planCharts', chartPlannerNode)
   .addNode('searchImages', imageSearchNode)
+  .addNode('renderQa', renderQaNode)
   .addNode('composeDeck', deckComposerNode)
   .addEdge('__start__', 'resolveTemplate')
   .addEdge('resolveTemplate', 'planLayout')
   .addEdge('planLayout', 'planCharts')
   .addEdge('planCharts', 'searchImages')
-  .addEdge('searchImages', 'composeDeck')
+  .addEdge('searchImages', 'renderQa')
+  .addEdge('renderQa', 'composeDeck')
   .addEdge('composeDeck', '__end__');
 
 export const slideRenderGraph = workflow.compile();

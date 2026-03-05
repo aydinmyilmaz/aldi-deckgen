@@ -64,6 +64,10 @@ export const SlideRenderState = Annotation.Root({
     reducer: (_, y) => y,
     default: () => EMPTY_RESULT,
   }),
+  qaIssues: Annotation<string[]>({
+    reducer: (_, next) => next,
+    default: () => [],
+  }),
 });
 
 export type SlideRenderPipelineState = typeof SlideRenderState.State;
