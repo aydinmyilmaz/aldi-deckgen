@@ -607,6 +607,95 @@ function renderSlideByLayout(
       });
       break;
     }
+    case 'card-grid': {
+      const cards = plan.cardItems ?? [];
+      const count = Math.min(cards.length, 4);
+      if (count === 0) break;
+
+      // 2–3 cards: single row. 4 cards: 2×2 grid.
+      const cols = count <= 3 ? count : 2;
+      const rows = Math.ceil(count / cols);
+      const cardW = (12.3 - (cols - 1) * 0.35) / cols;
+      const cardH = rows === 1 ? 3.9 : 1.85;
+      const startX = 0.5;
+      const startY = 2.0;
+      const gapX = 0.35;
+      const gapY = 0.25;
+
+      cards.slice(0, count).forEach((card, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (cardW + gapX);
+        const y = startY + row * (cardH + gapY);
+
+        // Card background
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x,
+          y,
+          w: cardW,
+          h: cardH,
+          line: { color: template.palette.divider, pt: 0.8 },
+          fill: { color: template.palette.surface },
+        });
+
+        // Badge rect (filled accent color, top-left)
+        if (card.badge) {
+          const badgeW = Math.min(card.badge.length * 0.12 + 0.4, cardW - 0.36);
+          slide.addShape(pptx.ShapeType.roundRect, {
+            x: x + 0.18,
+            y: y + 0.18,
+            w: badgeW,
+            h: 0.36,
+            line: { color: template.palette.accent, pt: 0 },
+            fill: { color: template.palette.accent },
+          });
+          slide.addText(card.badge.toUpperCase(), {
+            x: x + 0.18,
+            y: y + 0.18,
+            w: badgeW,
+            h: 0.36,
+            align: 'center',
+            valign: 'middle',
+            fontFace: template.typography.bodyFont,
+            fontSize: 9,
+            bold: true,
+            color: template.palette.background,
+          });
+        }
+
+        const titleY = card.badge ? y + 0.65 : y + 0.22;
+        const titleH = 0.55;
+
+        // Card title
+        slide.addText(card.title, {
+          x: x + 0.18,
+          y: titleY,
+          w: cardW - 0.36,
+          h: titleH,
+          fontFace: template.typography.bodyFont,
+          fontSize: 15,
+          bold: true,
+          color: template.palette.text,
+          fit: 'shrink',
+        });
+
+        // Bullets
+        if (card.bullets.length > 0) {
+          slide.addText(
+            makeBulletRuns(card.bullets.slice(0, 3), template.palette.mutedText, template.typography.bodyFont),
+            {
+              x: x + 0.18,
+              y: titleY + titleH + 0.1,
+              w: cardW - 0.36,
+              h: cardH - (titleY - y) - titleH - 0.2,
+              fontSize: 11,
+              fit: 'shrink',
+            }
+          );
+        }
+      });
+      break;
+    }
     case 'content-single-column':
     default: {
       addKeyMessageBlock(slide, plan, template);
