@@ -14,8 +14,10 @@ const STRUCTURED_SLIDE_TYPES = new Set([
 ]);
 
 const STRUCTURED_VISUAL_RE = /statistic|percent|comparison|card|table|grid|highlight|tier|framework|use case|decision tree|criteria|matrix|adoption path/i;
+const STRUCTURED_LAYOUT_HINTS = new Set(['stats-highlight', 'card-grid', 'list-cards', 'comparison-table', 'criteria-table']);
 
 function isEligible(slide: SlideOutline): boolean {
+  if (slide.layoutHint && STRUCTURED_LAYOUT_HINTS.has(slide.layoutHint)) return true;
   return STRUCTURED_SLIDE_TYPES.has(slide.slideType) ||
     STRUCTURED_VISUAL_RE.test(slide.visualSuggestion ?? '');
 }
@@ -84,12 +86,12 @@ function sanitizeCardItems(input: unknown): CardItem[] | undefined {
       };
     })
     .filter((item): item is { badge?: string; title: string; bullets: string[] } => Boolean(item))
-    .slice(0, 4);
+    .slice(0, 5);
 
   if (raw.length < 2) return undefined;
 
-  const perCardBulletLimit = raw.length === 4 ? 2 : 3;
-  const perBulletWordLimit = raw.length === 4 ? 8 : 10;
+  const perCardBulletLimit = 3;
+  const perBulletWordLimit = raw.length >= 4 ? 10 : 12;
 
   const cards = raw
     .map((item) => {
@@ -156,7 +158,8 @@ export async function structuredDataNode(
       `You are a data structuring assistant for presentation slides.\n` +
       `For each slide provided, decide which ONE structured layout it best fits and return data for it:\n\n` +
       `- "statCards": for slides with 2–4 key statistics/metrics. Each card has a "value" (big number/%, e.g. "78%"), "label" (descriptor, ≤5 words), and optional "context" (footnote, ≤8 words).\n` +
-      `- "cardItems": for slides listing 2–4 distinct concepts/options/steps/tier blocks. Each card has optional "badge" (category label, ≤2 words), "title" (card heading, ≤6 words), and "bullets" (2–3 supporting points, each ≤8 words).\n` +
+      `- "cardItems": for slides listing 2–5 distinct concepts/options/steps/tier blocks. Each card has optional "badge" (category label, ≤2 words), "title" (card heading, ≤6 words), and "bullets" (2–3 supporting points, each ≤10 words).\n` +
+      `  Use 2–4 cards for grid layout (card-grid), use 3–5 cards for full-width stacked layout (list-cards).\n` +
       `  Prefer "cardItems" for tiered frameworks (Tier 1/2/3), decision branches, and side-by-side use-case blocks.\n` +
       `- "tableData": for slides comparing items across attributes. "headers" is the column labels array; "rows" is a 2D array of cell strings. 2–5 columns, 2–6 data rows, concise cell text.\n` +
       `- "none": if no structured layout fits.\n\n` +

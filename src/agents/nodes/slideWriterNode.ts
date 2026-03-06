@@ -23,6 +23,7 @@ const VALID_LAYOUT_HINTS = new Set<LayoutHint>([
   'quote-callout',
   'stats-highlight',
   'card-grid',
+  'list-cards',
   'comparison-table',
   'decision-tree',
   'criteria-table',
@@ -155,12 +156,29 @@ export async function slideWriterNode(
       `• Never end title/keyMessage/bullets with dangling punctuation like ":" or ",".\n` +
       `• Use numbers/percentages only when source content has them — never force statistics.\n\n` +
       `VISUAL PLANNING RULES (required for each slide):\n` +
-      `• layoutHint must be exactly one of: title-focus, content-single-column, content-two-column, chart-right, conclusion-focus, agenda-list, quote-callout, stats-highlight, card-grid, comparison-table.\n` +
-      `  Also allowed: decision-tree, criteria-table, matrix-2x2, tier-detail-split, adoption-path.\n` +
-      `• visualKind must be one of: none, plot, image, table, cards.\n` +
-      `• If visualKind="plot": include plotSpec with kind (bar|line|scatter), labels[], values[], optional title/xLabel/yLabel.\n` +
+      `• Choose layoutHint based on content type — pick the ONE best match:\n` +
+      `  title-focus          → title/cover slide only\n` +
+      `  agenda-list          → agenda/contents slide only\n` +
+      `  conclusion-focus     → conclusion or Q&A slide only\n` +
+      `  content-single-column → 1–4 general bullets, simple statement\n` +
+      `  content-two-column   → 5+ bullets that split naturally into two groups\n` +
+      `  chart-right          → slide with a bar/line/scatter chart (set visualKind="plot")\n` +
+      `  quote-callout        → single powerful insight/statement + 2–3 supporting bullets\n` +
+      `  stats-highlight      → 2–4 key metrics/numbers (set visualKind="cards")\n` +
+      `  card-grid            → 2–4 feature/concept/tier cards in a 1-row or 2×2 grid (set visualKind="cards")\n` +
+      `  list-cards           → 3–5 items each with a title and bullets, stacked full-width (set visualKind="cards")\n` +
+      `  comparison-table     → comparing multiple options across shared attributes (set visualKind="table")\n` +
+      `  decision-tree        → 3-step decision or branching flow\n` +
+      `  criteria-table       → 2-column "criteria / yes-no" checklist (set visualKind="table")\n` +
+      `  matrix-2x2           → 4 items plotted on a precision × complexity quadrant\n` +
+      `  tier-detail-split    → two panels: "choose when" vs "example use cases"\n` +
+      `  adoption-path        → 3–4 sequential adoption or implementation steps\n` +
+      `• For stats-highlight, card-grid, list-cards → set visualKind="cards"\n` +
+      `• For comparison-table, criteria-table → set visualKind="table"\n` +
+      `• For chart-right → set visualKind="plot" and include plotSpec.\n` +
+      `• plotSpec: kind (bar|line|scatter), labels[], values[], optional title/xLabel/yLabel.\n` +
       `• plotSpec values MUST come from source content. Do not invent numbers.\n` +
-      `• Do NOT use years (e.g. 2024/2025), tier numbers, or reference indices as plot values.\n` +
+      `• Do NOT use years, tier numbers, or reference indices as plot values.\n` +
       `• If no clean numeric series exists, set visualKind="none" and omit plotSpec.\n\n` +
       (config.blueprintId
         ? `\nBLUEPRINT MODE:\n` +
