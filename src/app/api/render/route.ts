@@ -4,7 +4,7 @@ import type { SlideRenderRequest } from '@/types/render';
 import { normalizePresentationConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
-export const maxDuration = 300; // 5 min — requires Vercel Pro
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
