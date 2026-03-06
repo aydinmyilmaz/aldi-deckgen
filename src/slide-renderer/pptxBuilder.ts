@@ -95,9 +95,8 @@ function makeBulletRuns(
   fontFace: string
 ): PptxGenJS.TextProps[] {
   return bullets.map((text, i) => ({
-    text: text.trim(),
+    text: `• ${text.trim()}`,
     options: {
-      bullet: { type: 'bullet' },
       color,
       fontFace,
       breakLine: i < bullets.length - 1,

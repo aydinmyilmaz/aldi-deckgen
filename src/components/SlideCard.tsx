@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import { ChevronDown, ChevronUp, ExternalLink, GripVertical, ImagePlus, Loader2, PencilLine, RefreshCw, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, GripVertical, ImagePlus, Loader2, PencilLine, RefreshCw, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { SlideOutline } from '@/types';
 
@@ -196,6 +196,26 @@ export function SlideCard({
               </>
             )}
           </Button>
+          {slide.imageUrl && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-8 flex-none"
+              onClick={() => onUpdate({
+                ...slide,
+                imageUrl: undefined,
+                imageThumbUrl: undefined,
+                imageAlt: undefined,
+                imagePexelsUrl: undefined,
+                imageAttributionLine: undefined,
+                imageIntent: 'none',
+              })}
+              disabled={imageLoading || imageActionsDisabled}
+              title="Remove image"
+            >
+              <X className="size-3.5" />
+            </Button>
+          )}
         </div>
       </div>
 
