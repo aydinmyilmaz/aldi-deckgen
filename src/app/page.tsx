@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Download, FileStack, LayoutTemplate, Loader2, Sparkles, WandSparkles } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { Download, FileStack, LayoutTemplate, Sparkles, WandSparkles } from 'lucide-react';
 import { ConfigBar } from '@/components/ConfigBar';
 import { FileUpload } from '@/components/FileUpload';
 import { SlideList } from '@/components/SlideList';
@@ -28,19 +28,19 @@ const DEFAULT_CONFIG: PresentationConfig = {
 
 type Stage = 'input' | 'generating' | 'slides';
 
-const STAGE_LABELS: Record<string, { label: string; hint: string }> = {
-  documentExtraction: { label: 'Organizing document into slide blocks…', hint: 'LLM is splitting the extracted text into per-slide content sections' },
-  extractStyleDna:    { label: 'Analyzing writing style…',    hint: 'Capturing tone, structure & language patterns' },
-  contentStructure:   { label: 'Identifying key themes…',     hint: 'Finding main topics and supporting points' },
-  blueprintRouter:    { label: 'Routing blueprint mode…',      hint: 'Selecting domain blueprint when relevant' },
-  topicDesign:        { label: 'Designing visual language…',   hint: 'Picking topic-aware palette and motif' },
-  outline:            { label: 'Building slide outline…',     hint: 'Structuring the flow and titling slides' },
-  slideWriter:        { label: 'Writing slide content…',      hint: 'Creating bullets, key messages & speaker notes' },
-  imageQueryPlanner:  { label: 'Planning related images…',    hint: 'Generating search queries for optional slide visuals' },
-  contentReviewer:    { label: 'Reviewing quality…',          hint: 'Checking rules — may trigger a revision pass' },
-  planPlotSpec:       { label: 'Validating plot specs…',      hint: 'Grounding plot data in source content' },
-  planPlots:          { label: 'Rendering seaborn plots…',    hint: 'Generating chart visuals via Python renderer' },
-  visualQa:           { label: 'Running visual QA…',          hint: 'Converting slides to images and checking quality gates' },
+const STAGE_LABELS: Record<string, { label: string; hint: string; emojis: string[] }> = {
+  documentExtraction: { label: 'Organizing document…',       hint: 'Splitting extracted text into per-slide content blocks', emojis: ['📄','📋','🗂️','📑'] },
+  extractStyleDna:    { label: 'Analyzing writing style…',   hint: 'Capturing tone, structure & language patterns',          emojis: ['🔍','🧬','✍️','🎨'] },
+  contentStructure:   { label: 'Identifying key themes…',    hint: 'Finding main topics and supporting points',              emojis: ['🧠','💡','🗺️','🔑'] },
+  blueprintRouter:    { label: 'Choosing blueprint…',        hint: 'Selecting domain blueprint when relevant',               emojis: ['🗺️','📐','🧭','🔀'] },
+  topicDesign:        { label: 'Designing visual language…', hint: 'Picking topic-aware palette and motif',                  emojis: ['🎨','🖌️','✨','🌈'] },
+  outline:            { label: 'Building slide outline…',    hint: 'Structuring the flow and titling slides',               emojis: ['📝','🏗️','📐','🗒️'] },
+  slideWriter:        { label: 'Writing slide content…',     hint: 'Creating bullets, key messages & speaker notes',        emojis: ['✍️','💬','📊','🖊️'] },
+  imageQueryPlanner:  { label: 'Planning images…',           hint: 'Generating search queries for slide visuals',           emojis: ['🖼️','📸','🔎','🌄'] },
+  contentReviewer:    { label: 'Reviewing quality…',         hint: 'Checking rules — may trigger a revision pass',          emojis: ['🧐','✅','🔬','📋'] },
+  planPlotSpec:       { label: 'Validating plot specs…',     hint: 'Grounding plot data in source content',                 emojis: ['📈','🔢','📉','🧮'] },
+  planPlots:          { label: 'Rendering charts…',          hint: 'Generating chart visuals via Python renderer',          emojis: ['📊','📈','🎯','⚙️'] },
+  visualQa:           { label: 'Running visual QA…',         hint: 'Converting slides to images and checking quality',      emojis: ['👁️','🔍','✨','🎯'] },
 };
 
 export default function Home() {
@@ -52,9 +52,17 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const templateSectionRef = useRef<HTMLElement | null>(null);
-  const [stageInfo, setStageInfo] = useState<{ label: string; hint: string; step: number }>({
-    label: 'Starting…', hint: '', step: 0,
+  const [stageInfo, setStageInfo] = useState<{ label: string; hint: string; step: number; emojis: string[] }>({
+    label: 'Starting…', hint: '', step: 0, emojis: ['⚡','🚀','✨','💫'],
   });
+  const [emojiIdx, setEmojiIdx] = useState(0);
+
+  useEffect(() => {
+    if (stage !== 'generating') return;
+    setEmojiIdx(0);
+    const id = setInterval(() => setEmojiIdx((i) => (i + 1) % stageInfo.emojis.length), 600);
+    return () => clearInterval(id);
+  }, [stage, stageInfo.emojis]);
 
   async function generate() {
     if (!documentText && !config.userPrompt) {
@@ -65,7 +73,7 @@ export default function Home() {
     setStage('generating');
     const totalSteps = config.useLlmExtraction ? 5 : 4;
     let step = 0;
-    setStageInfo({ label: 'Preparing…', hint: 'Sending your content to the AI pipeline', step: 0 });
+    setStageInfo({ label: 'Preparing…', hint: 'Sending your content to the AI pipeline', step: 0, emojis: ['⚡','🚀','✨','💫'] });
 
     try {
       const res = await fetch('/api/generate', {
@@ -93,7 +101,7 @@ export default function Home() {
           if (event.type === 'error') throw new Error(event.message);
           if (event.type === 'stage' && event.node) {
             step += 1;
-            const info = STAGE_LABELS[event.node] ?? { label: 'Processing…', hint: '' };
+            const info = STAGE_LABELS[event.node] ?? { label: 'Processing…', hint: '', emojis: ['⚡','🔄','✨','💫'] };
             setStageInfo({ ...info, step });
           }
           if (event.type === 'done' && event.slides) {
@@ -327,7 +335,9 @@ export default function Home() {
               {stage === 'generating' ? (
                 <>
                   <span className="flex items-center gap-2">
-                    <Loader2 className="size-4 animate-spin" />
+                    <span className="text-lg leading-none" style={{ display: 'inline-block', minWidth: '1.4rem', textAlign: 'center' }}>
+                      {stageInfo.emojis[emojiIdx]}
+                    </span>
                     {stageInfo.label}
                   </span>
                   {stageInfo.hint && (
@@ -396,7 +406,7 @@ export default function Home() {
               <Button className="h-11 flex-1 text-base" onClick={exportPptx} disabled={isExporting}>
                 {isExporting ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
+                    <span className="animate-spin text-base">⚙️</span>
                     Building deck...
                   </>
                 ) : (
