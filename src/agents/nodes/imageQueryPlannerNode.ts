@@ -44,7 +44,15 @@ export async function imageQueryPlannerNode(
   }
 
   try {
+    const { mainTopic, summary, keyThemes } = state;
     const llm = createLLM();
+    const contextLines: string[] = [];
+    if (mainTopic) contextLines.push(`Topic: ${mainTopic}`);
+    if (summary) contextLines.push(`Summary: ${summary}`);
+    if (keyThemes?.length) contextLines.push(`Key themes: ${keyThemes.join(', ')}`);
+    const contextBlock = contextLines.length
+      ? `\n\nPresentation context:\n${contextLines.join('\n')}`
+      : '';
     const response = await llm.invoke([
       new SystemMessage(
         `You are a visual research planner for slides. ` +
@@ -56,6 +64,7 @@ export async function imageQueryPlannerNode(
         `- Queries must be concise (3-8 words), concrete visual nouns, no brand names.\n` +
         `- Prefer photo-friendly concepts (people, workplace, technology scenes, industry objects).\n` +
         `- If the concept is too abstract, set imageIntent to "none".\n` +
+        `- Ground queries in the overall presentation topic and themes when relevant.\n` +
         `- Keep response language in English for search compatibility.`
       ),
       new HumanMessage(
@@ -67,7 +76,7 @@ export async function imageQueryPlannerNode(
             keyMessage: slide.keyMessage ?? '',
             bullets: slide.bullets.slice(0, 4),
           }))
-        )}`
+        )}${contextBlock}`
       ),
     ]);
 

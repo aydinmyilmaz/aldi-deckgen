@@ -658,7 +658,8 @@ function renderSlideByLayout(
         line: { color: template.palette.divider, pt: 1 },
         fill: { color: template.palette.surface },
       });
-      const conclusionText = plan.bullets.length > 0
+      const hasConclusionBullets = plan.bullets.length > 0;
+      const conclusionText = hasConclusionBullets
         ? plan.bullets.join('\n')
         : (plan.keyMessage || '');
       if (conclusionText) {
@@ -670,18 +671,24 @@ function renderSlideByLayout(
           maxFont: 28,
           lineHeight: 1.26,
         });
-        // Conclusion is a statement — plain text, no bullet runs
-        slide.addText(conclusionText, {
-          x: 1.25,
-          y: 3.15,
-          w: 10.8,
-          h: 1.9,
-          align: 'center',
-          valign: 'middle',
-          fontFace: template.typography.bodyFont,
-          fontSize: conclusionFontSize,
-          color: template.palette.text,
-        });
+        if (hasConclusionBullets) {
+          slide.addText(
+            makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
+            { x: 1.25, y: 3.15, w: 10.8, h: 1.9, fontSize: conclusionFontSize, valign: 'middle' }
+          );
+        } else {
+          slide.addText(conclusionText, {
+            x: 1.25,
+            y: 3.15,
+            w: 10.8,
+            h: 1.9,
+            align: 'center',
+            valign: 'middle',
+            fontFace: template.typography.bodyFont,
+            fontSize: conclusionFontSize,
+            color: template.palette.text,
+          });
+        }
       }
       break;
     }
