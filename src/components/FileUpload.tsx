@@ -25,8 +25,8 @@ export function FileUpload({ onFileParsed, onError, disabled }: Props) {
       const form = new FormData();
       form.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+      const data = await res.json().catch(() => ({} as Record<string, string>));
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? `Upload failed (${res.status})`);
       onFileParsed(data.text, file.name);
     } catch (e) {
       onError((e as Error).message);
