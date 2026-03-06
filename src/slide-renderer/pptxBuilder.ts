@@ -22,7 +22,7 @@ function estimateWrappedLineCount(text: string, fontSize: number, boxW: number, 
   if (!sanitized) return 1;
 
   const paragraphs = sanitized.split('\n');
-  const avgCharWidthFactor = isBold ? 0.56 : 0.52;
+  const avgCharWidthFactor = isBold ? 0.52 : 0.47;
   const usableW = Math.max(boxW, 0.2);
   const charsPerLine = Math.max(
     1,
@@ -533,7 +533,7 @@ function renderSlideByLayout(
           boxW: 10.9,
           boxH: 2.8,
           minFont: 14,
-          maxFont: 20,
+          maxFont: 28,
           lineHeight: 1.28,
         });
         slide.addText(
@@ -572,13 +572,13 @@ function renderSlideByLayout(
           boxW: 6.25,
           boxH: 3.75,
           minFont: 14,
-          maxFont: 19,
+          maxFont: 28,
           lineHeight: 1.28,
         });
         // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
-          { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: bulletsFontSize }
+          { x: 0.6, y: 2.65, w: 6.25, h: 3.75, fontSize: bulletsFontSize, valign: 'middle' }
         );
       }
       const hasPlot = addPlotIfAvailable(slide, plan);
@@ -622,13 +622,13 @@ function renderSlideByLayout(
           boxW: 5.9,
           boxH: 3.7,
           minFont: 14,
-          maxFont: 19,
+          maxFont: 32,
           lineHeight: 1.28,
         });
         // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(left, template.palette.text, template.typography.bodyFont),
-          { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: leftFontSize }
+          { x: 0.65, y: 2.65, w: 5.9, h: 3.7, fontSize: leftFontSize, valign: 'middle' }
         );
       }
       if (right.length > 0) {
@@ -637,13 +637,13 @@ function renderSlideByLayout(
           boxW: 5.9,
           boxH: 3.7,
           minFont: 14,
-          maxFont: 19,
+          maxFont: 32,
           lineHeight: 1.28,
         });
         // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(right, template.palette.text, template.typography.bodyFont),
-          { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: rightFontSize }
+          { x: 6.85, y: 2.65, w: 5.9, h: 3.7, fontSize: rightFontSize, valign: 'middle' }
         );
       }
       break;
@@ -667,7 +667,7 @@ function renderSlideByLayout(
           boxW: 10.8,
           boxH: 1.9,
           minFont: 14,
-          maxFont: 20,
+          maxFont: 28,
           lineHeight: 1.26,
         });
         // Conclusion is a statement — plain text, no bullet runs
@@ -791,7 +791,7 @@ function renderSlideByLayout(
           boxW: 11.9,
           boxH: 2.8,
           minFont: 12,
-          maxFont: 16,
+          maxFont: 24,
           lineHeight: 1.28,
         });
         // Use a computed container size so bullet runs stay readable and within bounds.
@@ -1271,7 +1271,7 @@ function renderSlideByLayout(
           boxW: 5.35,
           boxH: 2.65,
           minFont: 14,
-          maxFont: 20,
+          maxFont: 28,
           lineHeight: 1.26,
         });
         slide.addText(
@@ -1422,13 +1422,13 @@ function renderSlideByLayout(
           boxW: 12.1,
           boxH: 3.8,
           minFont: 14,
-          maxFont: 19,
+          maxFont: 32,
           lineHeight: 1.28,
         });
         // Use a computed container size so bullet runs stay readable and within bounds.
         slide.addText(
           makeBulletRuns(plan.bullets, template.palette.text, template.typography.bodyFont),
-          { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: bodyFontSize }
+          { x: 0.65, y: 2.65, w: 12.1, h: 3.8, fontSize: bodyFontSize, valign: 'middle' }
         );
       }
       break;
