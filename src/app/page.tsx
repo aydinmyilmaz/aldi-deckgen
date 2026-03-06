@@ -236,7 +236,7 @@ export default function Home() {
                 <p className="section-label">Input</p>
                 <h2 className="mt-2 text-2xl font-semibold text-foreground">Content</h2>
                 <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-                  Describe your presentation topic. No file required — AI generates slides from your description alone.
+                  Describe your presentation topic. Upload a file for accurate, source-grounded content — or skip it and AI will generate slides from its own knowledge (best for general topics).
                 </p>
               </div>
               <Textarea
