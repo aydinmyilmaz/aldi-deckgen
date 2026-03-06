@@ -909,7 +909,7 @@ function renderSlideByLayout(
       const cols = count <= 3 ? count : 2;
       const rows = Math.ceil(count / cols);
       const cardW = (12.3 - (cols - 1) * 0.35) / cols;
-      const cardH = rows === 1 ? 3.9 : 2.15;
+      const cardH = rows === 1 ? 3.9 : 2.5;
       const startX = 0.5;
       const startY = 2.0;
       const gapX = 0.35;
@@ -1005,7 +1005,7 @@ function renderSlideByLayout(
             boxW: cardW - 0.36,
             boxH: bulletsBoxH,
             minFont: 11,
-            maxFont: 13,
+            maxFont: 16,
             lineHeight: 1.28,
           });
           slide.addText(

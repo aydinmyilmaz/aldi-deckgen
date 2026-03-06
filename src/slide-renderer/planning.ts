@@ -40,8 +40,8 @@ function isLegibleCardGrid(slide: SlideOutline): boolean {
   const cards = slide.cardItems ?? [];
   if (cards.length < 2 || cards.length > 4) return false;
 
-  const perCardBulletLimit = cards.length === 4 ? 2 : 3;
-  const perBulletWordLimit = cards.length === 4 ? 8 : 10;
+  const perCardBulletLimit = 3;
+  const perBulletWordLimit = cards.length === 4 ? 10 : 12;
 
   return cards.every((card) => {
     if (wordCount(card.title) > 6) return false;
