@@ -22,6 +22,7 @@ const VALID_LAYOUT_HINTS = new Set<LayoutHint>([
   'matrix-2x2',
   'tier-detail-split',
   'adoption-path',
+  'list-cards',
 ]);
 
 function isLayoutHint(value: unknown): value is LayoutHint {
@@ -48,6 +49,12 @@ function isLegibleCardGrid(slide: SlideOutline): boolean {
     if (card.bullets.length < 1 || card.bullets.length > perCardBulletLimit) return false;
     return card.bullets.every((bullet) => wordCount(bullet) <= perBulletWordLimit);
   });
+}
+
+function isLegibleListCards(slide: SlideOutline): boolean {
+  const cards = slide.cardItems ?? [];
+  if (cards.length < 3 || cards.length > 5) return false;
+  return cards.every((card) => wordCount(card.title) <= 8 && card.bullets.length <= 4);
 }
 
 function isLegibleComparisonTable(slide: SlideOutline): boolean {
@@ -125,12 +132,14 @@ function chooseLayout(
     hintedLayout === 'criteria-table' ||
     hintedLayout === 'matrix-2x2' ||
     hintedLayout === 'tier-detail-split' ||
-    hintedLayout === 'adoption-path'
+    hintedLayout === 'adoption-path' ||
+    hintedLayout === 'list-cards'
   )) {
     return hintedLayout;
   }
 
   if ((slide.statCards?.length ?? 0) >= 2) return 'stats-highlight';
+  if ((slide.cardItems?.length ?? 0) >= 5 && isLegibleListCards(slide)) return 'list-cards';
   if (isLegibleCardGrid(slide)) return 'card-grid';
   if (isLegibleComparisonTable(slide)) return 'comparison-table';
 

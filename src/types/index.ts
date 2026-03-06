@@ -16,6 +16,7 @@ export type LayoutHint =
   | 'quote-callout'
   | 'stats-highlight'
   | 'card-grid'
+  | 'list-cards'
   | 'comparison-table'
   | 'decision-tree'
   | 'criteria-table'

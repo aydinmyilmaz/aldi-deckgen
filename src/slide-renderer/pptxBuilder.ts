@@ -1366,6 +1366,94 @@ function renderSlideByLayout(
       });
       break;
     }
+    case 'list-cards': {
+      hasPrimaryVisual = true;
+      addKeyMessageBlock(slide, plan, template);
+      const listCards = plan.cardItems ?? [];
+      const listCount = Math.min(listCards.length, 5);
+      if (listCount === 0) break;
+
+      const lcStartX = 0.5;
+      const lcStartY = 2.55;
+      const lcCardW = 12.3;
+      const lcGap = 0.2;
+      const lcTotalH = 7.15 - lcStartY;
+      const lcCardH = (lcTotalH - (listCount - 1) * lcGap) / listCount;
+      const lcNumColW = 0.72;
+      const lcTitleColW = 4.2;
+      const lcDividerX = lcStartX + lcNumColW + lcTitleColW + 0.1;
+      const lcBulletsX = lcDividerX + 0.2;
+      const lcBulletsW = lcCardW - lcNumColW - lcTitleColW - 0.5;
+      const lcAccentColors = [template.palette.accent, '1F9BC1', '7C3AED', '22C55E', 'F59E0B'];
+
+      listCards.slice(0, listCount).forEach((card, i) => {
+        const y = lcStartY + i * (lcCardH + lcGap);
+        const accentColor = lcAccentColors[i % lcAccentColors.length];
+        const badgeDia = Math.min(0.44, lcCardH - 0.14);
+        const badgeX = lcStartX + 0.15;
+        const badgeY = y + lcCardH / 2 - badgeDia / 2;
+
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x: lcStartX, y, w: lcCardW, h: lcCardH,
+          line: { color: template.palette.divider, pt: 0.8 },
+          fill: { color: template.palette.surface },
+        });
+        slide.addShape(pptx.ShapeType.roundRect, {
+          x: lcStartX, y, w: 0.1, h: lcCardH,
+          line: { color: accentColor, pt: 0 },
+          fill: { color: accentColor },
+        });
+        slide.addShape(pptx.ShapeType.ellipse, {
+          x: badgeX, y: badgeY, w: badgeDia, h: badgeDia,
+          line: { color: accentColor, pt: 0 },
+          fill: { color: accentColor },
+        });
+        slide.addText(String(i + 1), {
+          x: badgeX, y: badgeY, w: badgeDia, h: badgeDia,
+          align: 'center', valign: 'middle',
+          fontFace: template.typography.bodyFont,
+          fontSize: 12, bold: true,
+          color: template.palette.background,
+        });
+
+        const lcTitleFontSize = computeFontSizeForBox({
+          text: card.title,
+          boxW: lcTitleColW,
+          boxH: lcCardH - 0.12,
+          minFont: 12, maxFont: 18,
+          lineHeight: 1.2, isBold: true,
+        });
+        slide.addText(card.title, {
+          x: lcStartX + lcNumColW, y: y + 0.06,
+          w: lcTitleColW, h: lcCardH - 0.12,
+          fontFace: template.typography.bodyFont,
+          fontSize: lcTitleFontSize, bold: true,
+          color: template.palette.text,
+          valign: 'middle',
+        });
+
+        slide.addShape(pptx.ShapeType.line, {
+          x: lcDividerX, y: y + 0.12,
+          w: 0, h: lcCardH - 0.24,
+          line: { color: template.palette.divider, pt: 0.8 },
+        });
+
+        if (card.bullets.length > 0) {
+          const lcBulletsFontSize = computeFontSizeForBox({
+            text: card.bullets.slice(0, 4).join('\n'),
+            boxW: lcBulletsW,
+            boxH: lcCardH - 0.12,
+            minFont: 10, maxFont: 14,
+            lineHeight: 1.25,
+          });
+          slide.addText(
+            makeBulletRuns(card.bullets.slice(0, 4), template.palette.text, template.typography.bodyFont),
+            { x: lcBulletsX, y: y + 0.06, w: lcBulletsW, h: lcCardH - 0.12, fontSize: lcBulletsFontSize, valign: 'middle' }
+          );
+        }
+      });
+      break;
+    }
     case 'comparison-table': {
       const tableData = plan.tableData;
       if (!tableData || tableData.headers.length === 0) break;
