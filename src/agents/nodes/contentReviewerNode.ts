@@ -3,7 +3,10 @@ import type { PipelineState } from '../state';
 
 const MAX_BULLET_WORDS = 12;
 const MAX_KEY_MESSAGE_WORDS = 15;
-const MAX_RETRIES = 2;
+const MAX_TITLE_WORDS = 8;
+const MAX_TITLE_CHARS = 64;
+const MAX_BULLET_CHARS = 88;
+const MAX_RETRIES = 4;
 
 // Slide types where the standard bullet-count / word-count rules are relaxed
 const RELAXED_BULLET_TYPES = new Set(['title', 'qna', 'references', 'agenda']);
@@ -18,6 +21,14 @@ function wordCount(text: string): number {
 
 function hasMarkdown(text: string): boolean {
   return /\*\*|__|\*(?!\*)/.test(text);
+}
+
+function hasEllipsis(text: string): boolean {
+  return /(\.\.\.|…)/.test(text);
+}
+
+function hasDanglingEnding(text: string): boolean {
+  return /[,:;\-—]\s*$/.test(text.trim());
 }
 
 function startsWithVerb(text: string): boolean {
@@ -55,6 +66,23 @@ export function contentReviewerNode(
   for (const slide of slides) {
     const type = slide.slideType ?? 'content';
     const isRelaxed = RELAXED_BULLET_TYPES.has(type);
+    const titleWords = wordCount(slide.title || '');
+    if ((slide.title || '').trim().length > MAX_TITLE_CHARS) {
+      issues.push(
+        `Slide ${slide.index} [${type}]: title is too long (${slide.title.trim().length} chars, max ${MAX_TITLE_CHARS}).`
+      );
+    }
+    if (titleWords > MAX_TITLE_WORDS) {
+      issues.push(
+        `Slide ${slide.index} [${type}]: title is ${titleWords} words (max ${MAX_TITLE_WORDS}). Shorten to a concise headline.`
+      );
+    }
+    if (hasEllipsis(slide.title || '')) {
+      issues.push(`Slide ${slide.index} [${type}]: title contains ellipsis. Use a complete concise title.`);
+    }
+    if (hasDanglingEnding(slide.title || '')) {
+      issues.push(`Slide ${slide.index} [${type}]: title appears incomplete (dangling punctuation).`);
+    }
 
     // ── Bullet count ──────────────────────────────────────────────────────
     if (type === 'qna') {
@@ -85,6 +113,21 @@ export function contentReviewerNode(
           `Shorten: "${bullet.slice(0, 60)}${bullet.length > 60 ? '…' : ''}"`
         );
       }
+      if (type !== 'references' && bullet.length > MAX_BULLET_CHARS) {
+        issues.push(
+          `Slide ${slide.index} [${type}], bullet ${i + 1}: ${bullet.length} chars (max ${MAX_BULLET_CHARS}) for readability.`
+        );
+      }
+      if (hasEllipsis(bullet)) {
+        issues.push(
+          `Slide ${slide.index} [${type}], bullet ${i + 1}: contains ellipsis. Write complete statement without "...".`
+        );
+      }
+      if (hasDanglingEnding(bullet)) {
+        issues.push(
+          `Slide ${slide.index} [${type}], bullet ${i + 1}: appears truncated (dangling punctuation).`
+        );
+      }
 
       // Markdown
       if (hasMarkdown(bullet)) {
@@ -107,6 +150,16 @@ export function contentReviewerNode(
         `Slide ${slide.index} [${type}]: keyMessage is ${wordCount(slide.keyMessage)} words (max ${MAX_KEY_MESSAGE_WORDS}). Shorten it.`
       );
     }
+    if (slide.keyMessage && hasEllipsis(slide.keyMessage)) {
+      issues.push(
+        `Slide ${slide.index} [${type}]: keyMessage contains ellipsis. Use a complete sentence.`
+      );
+    }
+    if (slide.keyMessage && hasDanglingEnding(slide.keyMessage)) {
+      issues.push(
+        `Slide ${slide.index} [${type}]: keyMessage appears truncated (dangling punctuation).`
+      );
+    }
 
     // ── Statistics in wrong slide types ───────────────────────────────────
     if (!STATS_ALLOWED_TYPES.has(type) && type !== 'content') {
@@ -118,6 +171,79 @@ export function contentReviewerNode(
           `This slide type should use insights/statements, not raw numbers. Keep at most 1 if essential.`
         );
       }
+    }
+
+    const cardItems = slide.cardItems;
+    if (cardItems?.length) {
+      if (cardItems.length < 2 || cardItems.length > 4) {
+        issues.push(
+          `Slide ${slide.index} [${type}]: cardItems count should be 2-4 (currently ${cardItems.length}).`
+        );
+      }
+      const perCardBulletMax = cardItems.length === 4 ? 2 : 3;
+      cardItems.forEach((card, cardIdx) => {
+        const titleWc = wordCount(card.title);
+        if (titleWc > 6) {
+          issues.push(
+            `Slide ${slide.index} [${type}], card ${cardIdx + 1}: title is ${titleWc} words (max 6).`
+          );
+        }
+        if (card.bullets.length < 1 || card.bullets.length > perCardBulletMax) {
+          issues.push(
+            `Slide ${slide.index} [${type}], card ${cardIdx + 1}: should have 1-${perCardBulletMax} bullets (currently ${card.bullets.length}).`
+          );
+        }
+        card.bullets.forEach((bullet, bulletIdx) => {
+          const wc = wordCount(bullet);
+          const cardBulletMaxWords = cardItems.length === 4 ? 8 : 10;
+          if (wc > cardBulletMaxWords) {
+            issues.push(
+              `Slide ${slide.index} [${type}], card ${cardIdx + 1}, bullet ${bulletIdx + 1}: ${wc} words (max ${cardBulletMaxWords}).`
+            );
+          }
+          if (hasEllipsis(bullet) || hasDanglingEnding(bullet)) {
+            issues.push(
+              `Slide ${slide.index} [${type}], card ${cardIdx + 1}, bullet ${bulletIdx + 1}: appears truncated.`
+            );
+          }
+        });
+      });
+    }
+
+    if (slide.tableData) {
+      const colCount = slide.tableData.headers.length;
+      const rowCount = slide.tableData.rows.length;
+      if (colCount < 2 || colCount > 5) {
+        issues.push(
+          `Slide ${slide.index} [${type}]: table headers should have 2-5 columns (currently ${colCount}).`
+        );
+      }
+      if (rowCount < 2 || rowCount > 6) {
+        issues.push(
+          `Slide ${slide.index} [${type}]: table rows should have 2-6 rows (currently ${rowCount}).`
+        );
+      }
+      slide.tableData.headers.forEach((header, colIdx) => {
+        if (wordCount(header) > 4 || header.length > 26) {
+          issues.push(
+            `Slide ${slide.index} [${type}]: table header ${colIdx + 1} is too long for readability.`
+          );
+        }
+      });
+      slide.tableData.rows.forEach((row, rowIdx) => {
+        if (row.length !== colCount) {
+          issues.push(
+            `Slide ${slide.index} [${type}]: table row ${rowIdx + 1} column count mismatch.`
+          );
+        }
+        row.forEach((cell, colIdx) => {
+          if (wordCount(cell) > 8 || cell.length > 42) {
+            issues.push(
+              `Slide ${slide.index} [${type}]: table cell r${rowIdx + 1}c${colIdx + 1} is too long for slide readability.`
+            );
+          }
+        });
+      });
     }
   }
 

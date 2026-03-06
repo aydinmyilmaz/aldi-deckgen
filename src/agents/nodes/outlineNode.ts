@@ -2,12 +2,30 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { createLLM } from '@/lib/llm';
 import { getPresentationGuidelines } from '@/lib/presentationGuidelines';
 import { normalizeOutlineBlueprint } from '../slideTypeUtils';
+import { getBlueprintSlides } from '@/agents/blueprints';
 import type { PipelineState } from '../state';
 
 export async function outlineNode(
   state: PipelineState
 ): Promise<Partial<PipelineState>> {
   const { mainTopic, keyThemes, summary, config, styleDna, extractedSlideContent } = state;
+  if (config.blueprintId) {
+    const blueprintSlides = getBlueprintSlides(config.blueprintId);
+    if (blueprintSlides.length > 0) {
+      return {
+        slideTitles: blueprintSlides.map((slide) => ({
+          index: slide.index,
+          title: slide.title,
+          slideType: slide.slideType,
+          keyMessage: slide.keyMessage,
+          visualSuggestion: slide.visualSuggestion,
+          ...(slide.layoutHint ? { layoutHint: slide.layoutHint } : {}),
+          ...(slide.visualKind ? { visualKind: slide.visualKind } : {}),
+        })),
+      };
+    }
+  }
+
   const llm = createLLM();
 
   const topicHints = extractedSlideContent.length > 0
@@ -24,6 +42,8 @@ export async function outlineNode(
       `\n\nNarrative rule: follow the narrative pattern from the Style DNA below. ` +
       `\n\nSlide structure rules:\n` +
       `- Slide 1: always type "title". Use the main topic as a compelling headline.\n` +
+      `- Every title must be concise: target 3–6 words, max 8 words.\n` +
+      `- Never use ellipsis ("..." or "…") in titles.\n` +
       `- Slides 2 to ${config.slideCount - 1}: assign the most appropriate type for the content from this list:\n` +
       `  agenda, background, problem, objectives, method, findings, solution, implementation, benefits, content\n` +
       `  Choose based on what that slide covers. Not every type must be used — pick what fits.\n` +

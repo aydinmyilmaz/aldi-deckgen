@@ -3,6 +3,8 @@ import { GraphState } from './state';
 import { documentExtractionNode } from './nodes/documentExtractionNode';
 import { styleDnaNode as extractStyleDnaNode } from './nodes/styleDnaNode';
 import { contentStructureNode } from './nodes/contentStructureNode';
+import { blueprintRouterNode } from './nodes/blueprintRouterNode';
+import { topicDesignNode } from './nodes/topicDesignNode';
 import { outlineNode } from './nodes/outlineNode';
 import { slideWriterNode } from './nodes/slideWriterNode';
 import { structuredDataNode } from './nodes/structuredDataNode';
@@ -15,13 +17,15 @@ function routeEntry(state: PipelineState): string {
 }
 
 function routeAfterReview(state: PipelineState): string {
-  return state.reviewFeedback ? 'slideWriter' : '__end__';
+  return state.reviewFeedback ? 'slideWriter' : 'imageQueryPlanner';
 }
 
 const workflow = new StateGraph(GraphState)
   .addNode('documentExtraction', documentExtractionNode)
   .addNode('extractStyleDna', extractStyleDnaNode)
   .addNode('contentStructure', contentStructureNode)
+  .addNode('blueprintRouter', blueprintRouterNode)
+  .addNode('topicDesign', topicDesignNode)
   .addNode('outline', outlineNode)
   .addNode('slideWriter', slideWriterNode)
   .addNode('structuredData', structuredDataNode)
@@ -33,14 +37,16 @@ const workflow = new StateGraph(GraphState)
   })
   .addEdge('documentExtraction', 'extractStyleDna')
   .addEdge('extractStyleDna', 'contentStructure')
-  .addEdge('contentStructure', 'outline')
+  .addEdge('contentStructure', 'blueprintRouter')
+  .addEdge('blueprintRouter', 'topicDesign')
+  .addEdge('topicDesign', 'outline')
   .addEdge('outline', 'slideWriter')
   .addEdge('slideWriter', 'structuredData')
-  .addEdge('structuredData', 'imageQueryPlanner')
-  .addEdge('imageQueryPlanner', 'contentReviewer')
+  .addEdge('structuredData', 'contentReviewer')
   .addConditionalEdges('contentReviewer', routeAfterReview, {
     slideWriter: 'slideWriter',
-    __end__: '__end__',
+    imageQueryPlanner: 'imageQueryPlanner',
   });
+workflow.addEdge('imageQueryPlanner', '__end__');
 
 export const presentationGraph = workflow.compile();

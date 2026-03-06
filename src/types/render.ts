@@ -1,4 +1,17 @@
-import type { CardItem, ImageIntent, PresentationConfig, SlideOutline, SlideType, StatCard, TableData } from '@/types';
+import type {
+  BlueprintId,
+  CardItem,
+  ImageIntent,
+  LayoutHint,
+  PlotKind,
+  PresentationConfig,
+  SlideOutline,
+  SlidePlotSpec,
+  SlideType,
+  SlideVisualKind,
+  StatCard,
+  TableData,
+} from '@/types';
 
 export type DeckTemplateId =
   | 'reveal-black'
@@ -43,19 +56,14 @@ export interface DeckTemplate {
     bodyFont: string;
     monoFont: string;
   };
+  renderProfile?: {
+    topBar: 'solid' | 'none';
+    showSlideIndex: boolean;
+    motifStyle: 'minimal' | 'geometric';
+  };
 }
 
-export type RenderLayoutKind =
-  | 'title-focus'
-  | 'content-single-column'
-  | 'content-two-column'
-  | 'chart-right'
-  | 'conclusion-focus'
-  | 'agenda-list'
-  | 'quote-callout'
-  | 'stats-highlight'
-  | 'card-grid'
-  | 'comparison-table';
+export type RenderLayoutKind = LayoutHint;
 
 export type ChartKind = 'bar' | 'pie' | 'line';
 
@@ -77,6 +85,12 @@ export interface SlideImageAsset {
   attributionLine: string;
 }
 
+export interface RenderPlotAsset {
+  kind: PlotKind;
+  dataUri: string;
+  code: string;
+}
+
 export interface SlideRenderPlan {
   slideId: string;
   index: number;
@@ -86,12 +100,16 @@ export interface SlideRenderPlan {
   keyMessage: string;
   speakerNotes: string;
   visualSuggestion: string;
+  layoutHint?: LayoutHint;
+  visualKind?: SlideVisualKind;
+  plotSpec?: SlidePlotSpec;
   imageIntent: ImageIntent;
   imageQuery?: string;
   selectedImageUrl?: string;
   selectedImageAlt?: string;
   selectedImageAttributionLine?: string;
   chart?: SlideChartSpec;
+  plot?: RenderPlotAsset;
   statCards?: StatCard[];
   cardItems?: CardItem[];
   tableData?: TableData;
@@ -103,10 +121,21 @@ export interface SlideRenderRequest {
   config: PresentationConfig;
   templateId: DeckTemplateId;
   fileName?: string;
+  blueprintId?: BlueprintId;
 }
 
 export interface SlideRenderResult {
   fileName: string;
   mimeType: string;
   base64: string;
+  qaReport?: {
+    passed: boolean;
+    issues: string[];
+    artifactDir?: string;
+    scoredSlides?: number;
+  };
+  artifacts?: {
+    pdfPath?: string;
+    imageDir?: string;
+  };
 }

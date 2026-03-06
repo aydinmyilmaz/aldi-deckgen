@@ -1,4 +1,4 @@
-import type { SlideType } from '@/types';
+import type { LayoutHint, SlideType, SlideVisualKind } from '@/types';
 
 const VALID_SLIDE_TYPES = new Set<SlideType>([
   'title',
@@ -23,6 +23,8 @@ export interface OutlineBlueprint {
   slideType: SlideType;
   keyMessage: string;
   visualSuggestion: string;
+  layoutHint?: LayoutHint;
+  visualKind?: SlideVisualKind;
 }
 
 function asNonEmptyString(value: unknown, fallback: string): string {
@@ -57,6 +59,8 @@ export function normalizeOutlineBlueprint(
       slideType: normalizeSlideType(candidate.slideType),
       keyMessage: asNonEmptyString(candidate.keyMessage, ''),
       visualSuggestion: asNonEmptyString(candidate.visualSuggestion, ''),
+      ...(typeof candidate.layoutHint === 'string' ? { layoutHint: candidate.layoutHint as LayoutHint } : {}),
+      ...(typeof candidate.visualKind === 'string' ? { visualKind: candidate.visualKind as SlideVisualKind } : {}),
     });
   }
 

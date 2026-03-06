@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "qa:check-tools": "bash scripts/check-pptx-tools.sh",
+    "qa:acceptance": "npx --yes tsx scripts/qa/runAcceptance.ts"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

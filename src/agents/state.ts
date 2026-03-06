@@ -1,5 +1,13 @@
 import { Annotation } from '@langchain/langgraph';
-import type { PresentationConfig, SlideOutline, SlideType, ExtractedSlideContent } from '@/types';
+import type {
+  ExtractedSlideContent,
+  LayoutHint,
+  PresentationConfig,
+  SlideOutline,
+  SlideType,
+  SlideVisualKind,
+  TopicDesignProfile,
+} from '@/types';
 
 export const GraphState = Annotation.Root({
   // Inputs — set once before graph runs
@@ -39,9 +47,22 @@ export const GraphState = Annotation.Root({
   }),
 
   // Agent 2 output
-  slideTitles: Annotation<Array<{ index: number; title: string; slideType: SlideType; keyMessage: string; visualSuggestion: string }>>({
+  slideTitles: Annotation<Array<{
+    index: number;
+    title: string;
+    slideType: SlideType;
+    keyMessage: string;
+    visualSuggestion: string;
+    layoutHint?: LayoutHint;
+    visualKind?: SlideVisualKind;
+  }>>({
     reducer: (_, y) => y,
     default: () => [],
+  }),
+
+  topicDesignProfile: Annotation<TopicDesignProfile | undefined>({
+    reducer: (_, y) => y,
+    default: () => undefined,
   }),
 
   // Agent 3 output — final result

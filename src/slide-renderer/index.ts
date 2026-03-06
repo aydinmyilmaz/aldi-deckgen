@@ -1,6 +1,7 @@
 import { slideRenderGraph } from '@/slide-renderer/graph';
 import { listDeckTemplates } from '@/slide-renderer/templates';
 import type { DeckTemplate, SlideRenderRequest, SlideRenderResult } from '@/types/render';
+import { normalizePresentationConfig } from '@/lib/config';
 
 export type SlideRenderPipelineEvent =
   | { type: 'stage'; node: string }
@@ -10,9 +11,13 @@ export type SlideRenderPipelineEvent =
 export async function* streamSlideRenderPipeline(
   request: SlideRenderRequest
 ): AsyncGenerator<SlideRenderPipelineEvent> {
+  const normalizedRequest = {
+    ...request,
+    config: normalizePresentationConfig(request.config),
+  };
   let result: SlideRenderResult | null = null;
 
-  const stream = await slideRenderGraph.stream(request, { streamMode: 'updates' });
+  const stream = await slideRenderGraph.stream(normalizedRequest, { streamMode: 'updates' });
   for await (const chunk of stream) {
     const node = Object.keys(chunk)[0];
     yield { type: 'stage', node };
@@ -30,7 +35,10 @@ export async function* streamSlideRenderPipeline(
 export async function runSlideRenderPipeline(
   request: SlideRenderRequest
 ): Promise<SlideRenderResult> {
-  const state = await slideRenderGraph.invoke(request);
+  const state = await slideRenderGraph.invoke({
+    ...request,
+    config: normalizePresentationConfig(request.config),
+  });
   if (!state.result?.base64) {
     throw new Error('Render pipeline returned empty result');
   }

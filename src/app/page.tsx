@@ -21,6 +21,9 @@ const DEFAULT_CONFIG: PresentationConfig = {
   purpose: 'inform',
   useLlmExtraction: false,
   useRelatedImages: false,
+  designMode: 'hybrid',
+  qualityGate: 'balanced',
+  topicPalette: 'auto',
 };
 
 type Stage = 'input' | 'generating' | 'slides';
@@ -29,10 +32,15 @@ const STAGE_LABELS: Record<string, { label: string; hint: string }> = {
   documentExtraction: { label: 'Organizing document into slide blocks…', hint: 'LLM is splitting the extracted text into per-slide content sections' },
   extractStyleDna:    { label: 'Analyzing writing style…',    hint: 'Capturing tone, structure & language patterns' },
   contentStructure:   { label: 'Identifying key themes…',     hint: 'Finding main topics and supporting points' },
+  blueprintRouter:    { label: 'Routing blueprint mode…',      hint: 'Selecting domain blueprint when relevant' },
+  topicDesign:        { label: 'Designing visual language…',   hint: 'Picking topic-aware palette and motif' },
   outline:            { label: 'Building slide outline…',     hint: 'Structuring the flow and titling slides' },
   slideWriter:        { label: 'Writing slide content…',      hint: 'Creating bullets, key messages & speaker notes' },
   imageQueryPlanner:  { label: 'Planning related images…',    hint: 'Generating search queries for optional slide visuals' },
   contentReviewer:    { label: 'Reviewing quality…',          hint: 'Checking rules — may trigger a revision pass' },
+  planPlotSpec:       { label: 'Validating plot specs…',      hint: 'Grounding plot data in source content' },
+  planPlots:          { label: 'Rendering seaborn plots…',    hint: 'Generating chart visuals via Python renderer' },
+  visualQa:           { label: 'Running visual QA…',          hint: 'Converting slides to images and checking quality gates' },
 };
 
 export default function Home() {

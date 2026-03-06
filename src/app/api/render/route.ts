@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server';
 import { runSlideRenderPipeline } from '@/slide-renderer';
 import type { SlideRenderRequest } from '@/types/render';
+import { normalizePresentationConfig } from '@/lib/config';
 
 export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 min — requires Vercel Pro
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,15 +19,22 @@ export async function POST(req: NextRequest) {
     if (!body?.config) {
       return new Response(JSON.stringify({ error: 'config is required' }), { status: 400 });
     }
+    const request: SlideRenderRequest = {
+      ...body,
+      config: normalizePresentationConfig(body.config),
+    };
 
-    const result = await runSlideRenderPipeline(body);
+    const result = await runSlideRenderPipeline(request);
     const buffer = Buffer.from(result.base64, 'base64');
+    const qaStatus = result.qaReport?.passed === false ? 'failed' : 'passed';
 
     return new Response(buffer, {
       headers: {
         'Content-Type': result.mimeType,
         'Content-Disposition': `attachment; filename="${result.fileName}"`,
         'Cache-Control': 'no-store',
+        'X-PPTX-QA-Status': qaStatus,
+        'X-PPTX-QA-Issues': String(result.qaReport?.issues.length ?? 0),
       },
     });
   } catch (error) {

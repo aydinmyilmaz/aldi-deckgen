@@ -1,5 +1,6 @@
 import { presentationGraph } from './graph';
 import type { PresentationConfig, SlideOutline } from '@/types';
+import { normalizePresentationConfig } from '@/lib/config';
 
 export type PipelineEvent =
   | { type: 'stage'; node: string }
@@ -10,10 +11,11 @@ export async function* streamGenerationPipeline(
   documentText: string,
   config: PresentationConfig
 ): AsyncGenerator<PipelineEvent> {
+  const normalizedConfig = normalizePresentationConfig(config);
   let slides: SlideOutline[] = [];
 
   const stream = await presentationGraph.stream(
-    { documentText, config },
+    { documentText, config: normalizedConfig },
     { streamMode: 'updates' }
   );
 
@@ -33,6 +35,9 @@ export async function runGenerationPipeline(
   documentText: string,
   config: PresentationConfig
 ): Promise<SlideOutline[]> {
-  const result = await presentationGraph.invoke({ documentText, config });
+  const result = await presentationGraph.invoke({
+    documentText,
+    config: normalizePresentationConfig(config),
+  });
   return result.slides;
 }

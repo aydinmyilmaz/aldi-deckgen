@@ -8,6 +8,7 @@ export async function imageSearchNode(
 
   const updatedPlan = await Promise.all(
     state.renderPlan.map(async (item) => {
+      if (item.plot?.dataUri) return { ...item, image: undefined };
       if (item.chart) return { ...item, image: undefined };
       if (item.selectedImageUrl) {
         try {
