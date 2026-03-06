@@ -5,7 +5,6 @@
  */
 import fs from 'fs';
 import path from 'path';
-import FormData from 'form-data';
 
 const BASE_URL = 'https://aldi-deckgen.vercel.app';
 const DOC_PATH = path.join(process.cwd(), 'data', 'Document 3.docx');
@@ -29,12 +28,10 @@ async function main() {
   // 1. Upload the document
   const documentText = await step('Upload /api/upload', async () => {
     const form = new FormData();
-    form.append('file', fs.createReadStream(DOC_PATH), 'Document 3.docx');
+    const fileBytes = fs.readFileSync(DOC_PATH);
+    form.append('file', new Blob([fileBytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'Document 3.docx');
     const res = await fetch(`${BASE_URL}/api/upload`, {
       method: 'POST',
-      // @ts-expect-error node FormData headers
-      headers: form.getHeaders(),
-      // @ts-expect-error node FormData
       body: form,
     });
     const body = await res.json().catch(() => ({})) as { text?: string; error?: string };
