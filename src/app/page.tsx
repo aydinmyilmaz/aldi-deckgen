@@ -235,10 +235,13 @@ export default function Home() {
               <div className="mb-4">
                 <p className="section-label">Input</p>
                 <h2 className="mt-2 text-2xl font-semibold text-foreground">Content</h2>
+                <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                  Describe your presentation topic. No file required — AI generates slides from your description alone.
+                </p>
               </div>
               <Textarea
                 rows={6}
-                placeholder="Tell us about your presentation"
+                placeholder="e.g. A 5-slide overview of our Q4 sales strategy targeting enterprise clients"
                 value={config.userPrompt}
                 onChange={(e) => setConfig({ ...config, userPrompt: e.target.value })}
                 disabled={stage === 'generating'}
@@ -313,6 +316,9 @@ export default function Home() {
               <div className="mb-4">
                 <p className="section-label">Optional</p>
                 <h2 className="mt-2 text-2xl font-semibold text-foreground">Attachments</h2>
+                <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                  Upload a document to ground the AI in your source material. Supports PDF, DOCX, PPTX, XLSX, CSV, TXT.
+                </p>
               </div>
               <FileUpload
                 onFileParsed={(text) => setDocumentText(text)}
